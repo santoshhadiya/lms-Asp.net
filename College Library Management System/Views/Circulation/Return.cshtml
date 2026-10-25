@@ -1,0 +1,147 @@
+@using College_Library_Management_System.Models.Enums
+@model College_Library_Management_System.ViewModels.Circulation.ReturnBookViewModel
+@{
+    ViewData["Title"] = "Process Book Return";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7">
+        <div class="card-custom">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-box-arrow-in-down"></i> Return Circulation Book</span>
+                <a asp-action="ActiveLoans" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Active Loans
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                @if (Model == null)
+                {
+                    <!-- Search Active Loan by Accession Number -->
+                    <div class="p-4 text-center border rounded bg-light mb-3">
+                        <i class="bi bi-upc-scan fs-1 text-primary mb-2 d-block"></i>
+                        <h5 class="fw-bold mb-1">Scan or Enter Book Accession Number</h5>
+                        <p class="text-muted small mb-3">Locate the active loan by typing the accession number on the physical book copy.</p>
+                        
+                        <form method="get" asp-action="Return" class="row justify-content-center g-2">
+                            <div class="col-sm-8 col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-barcode"></i></span>
+                                    <input type="text" name="accession" class="form-control font-monospace text-uppercase" placeholder="e.g. ACC-0001" autofocus required />
+                                </div>
+                            </div>
+                            <div class="col-sm-4 col-md-3">
+                                <button type="submit" class="btn btn-primary-library w-100">
+                                    <i class="bi bi-search me-1"></i> Find Loan
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <!-- Active Loan Found - Process Return -->
+                    <div class="p-3 bg-light rounded border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-secondary font-monospace fs-6 px-3 py-2">@Model.AccessionNumber</span>
+                            <span class="badge @(Model.IsOverdue ? "bg-danger" : "bg-success")">
+                                @(Model.IsOverdue ? $"{Model.OverdueDays} Days Overdue" : "On Time Return")
+                            </span>
+                        </div>
+
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <div class="text-muted small">Book Title</div>
+                                <div class="fw-bold fs-6">@Model.BookTitle</div>
+                            </div>
+
+                            <div class="col-sm-6 mt-3">
+                                <div class="text-muted small">Borrower</div>
+                                <div class="fw-semibold">@Model.StudentName</div>
+                                <div class="small font-monospace text-muted">@Model.StudentEnrollment (@Model.DepartmentCode)</div>
+                            </div>
+
+                            <div class="col-sm-6 mt-3">
+                                <div class="text-muted small">Circulation Dates</div>
+                                <div class="small">Issued: <strong>@Model.IssuedAt.ToString("dd MMM yyyy")</strong></div>
+                                <div class="small">Due: <strong>@Model.DueAt.ToString("dd MMM yyyy")</strong></div>
+                                <div class="small">Return Date: <strong>@Model.ReturnDate.ToString("dd MMM yyyy")</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fine Breakdown Card -->
+                    @if (Model.IsOverdue)
+                    {
+                        <div class="alert alert-danger border-danger d-flex align-items-center mb-4">
+                            <i class="bi bi-exclamation-circle-fill fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-1">Overdue Late Fee Applicable</h6>
+                                <p class="mb-0 small">
+                                    Student is <strong>@Model.OverdueDays days</strong> overdue. At the rate of <strong>₹@Model.DailyFineRate.ToString("N2")/day</strong>, a late fine of <strong>₹@Model.CalculatedFine.ToString("N2")</strong> will be recorded against the student account.
+                                </p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success d-flex align-items-center mb-4">
+                            <i class="bi bi-check-circle-fill fs-3 me-3"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Returned on Schedule</h6>
+                                <p class="mb-0 small">No late fine will be assessed (₹0.00 late fee).</p>
+                            </div>
+                        </div>
+                    }
+
+                    <form asp-action="Return" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="LoanId" />
+                        <input type="hidden" asp-for="BookCopyId" />
+                        <input type="hidden" asp-for="AccessionNumber" />
+                        <input type="hidden" asp-for="BookTitle" />
+                        <input type="hidden" asp-for="StudentEnrollment" />
+                        <input type="hidden" asp-for="StudentName" />
+                        <input type="hidden" asp-for="DepartmentCode" />
+                        <input type="hidden" asp-for="IssuedAt" />
+                        <input type="hidden" asp-for="DueAt" />
+                        <input type="hidden" asp-for="ReturnDate" />
+                        <input type="hidden" asp-for="IsOverdue" />
+                        <input type="hidden" asp-for="OverdueDays" />
+                        <input type="hidden" asp-for="DailyFineRate" />
+                        <input type="hidden" asp-for="CalculatedFine" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="ReturnCondition" class="form-label fw-semibold"></label>
+                            <select asp-for="ReturnCondition" class="form-select" required>
+                                <option value="@BookCopyStatus.Available">Available (Good condition - return to shelf)</option>
+                                <option value="@BookCopyStatus.Damaged">Damaged (Needs repair or rebinding)</option>
+                                <option value="@BookCopyStatus.Lost">Reported Lost (Decommission from circulation)</option>
+                            </select>
+                            <span asp-validation-for="ReturnCondition" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ConditionNotes" class="form-label fw-semibold"></label>
+                            <textarea asp-for="ConditionNotes" class="form-control" rows="3" placeholder="Condition upon return (e.g. Pages intact, slight corner tear, clean)" maxlength="500"></textarea>
+                            <span asp-validation-for="ConditionNotes" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <a asp-action="ActiveLoans" class="btn btn-light border">Cancel</a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> Complete Return
+                            </button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

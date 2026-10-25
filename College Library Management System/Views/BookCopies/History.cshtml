@@ -1,0 +1,165 @@
+@using College_Library_Management_System.Models.Enums
+@model College_Library_Management_System.ViewModels.Inventory.BookCopyHistoryViewModel
+@{
+    ViewData["Title"] = "Copy Circulation History - " + Model.AccessionNumber;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">Circulation History</h2>
+        <p class="text-muted small mb-0">Complete lifecycle audit of physical copy <span class="font-monospace fw-bold">@Model.AccessionNumber</span>.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Inventory
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.BookCopyId" class="btn btn-light border">
+            <i class="bi bi-pencil me-1"></i> Edit Copy
+        </a>
+    </div>
+</div>
+
+<!-- Copy Summary Card -->
+<div class="card-custom mb-4">
+    <div class="card-body p-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <span class="text-muted small text-uppercase fw-semibold d-block">Book Title</span>
+                <a asp-controller="Books" asp-action="Details" asp-route-id="@Model.BookId" class="fw-bold fs-5 text-decoration-none text-primary">
+                    @Model.BookTitle
+                </a>
+                @if (!string.IsNullOrEmpty(Model.ISBN))
+                {
+                    <div class="text-muted small font-monospace mt-1">ISBN: @Model.ISBN</div>
+                }
+            </div>
+
+            <div class="col-md-2 col-6">
+                <span class="text-muted small text-uppercase fw-semibold d-block">Accession No.</span>
+                <span class="font-monospace fw-bold fs-6">@Model.AccessionNumber</span>
+            </div>
+
+            <div class="col-md-2 col-6">
+                <span class="text-muted small text-uppercase fw-semibold d-block">Shelf Location</span>
+                <span class="fw-semibold">@Model.ShelfLocation</span>
+            </div>
+
+            <div class="col-md-3">
+                <span class="text-muted small text-uppercase fw-semibold d-block">Status</span>
+                <span class="badge @(Model.Status == BookCopyStatus.Available ? "bg-success" : Model.Status == BookCopyStatus.Issued ? "bg-info" : Model.Status == BookCopyStatus.Damaged ? "bg-warning text-dark" : "bg-danger") fs-6 px-3 py-2">
+                    @Model.Status
+                </span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ConditionNotes))
+            {
+                <div class="col-12 mt-2 pt-2 border-top">
+                    <span class="text-muted small text-uppercase fw-semibold d-block">Condition / Notes</span>
+                    <span class="small text-secondary">@Model.ConditionNotes</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Loan History Table -->
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-clock-history"></i> Loan History Records</span>
+        <span class="badge bg-secondary">Total: @Model.LoanHistory.Count loans</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Dept</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Status</th>
+                    <th>Renewals</th>
+                    <th>Fine</th>
+                    <th>Staff</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.LoanHistory.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-check fs-3 d-block mb-2"></i>
+                            This physical copy has not been issued to any student yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var loan in Model.LoanHistory)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@loan.StudentName</div>
+                            <span class="font-monospace small text-muted">@loan.StudentEnrollment</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@loan.DepartmentCode</span>
+                        </td>
+                        <td>@loan.IssuedAt.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <span class="@(loan.LoanStatus == LoanStatus.Active && loan.DueAt < DateTime.Today ? "text-danger fw-bold" : "")">
+                                @loan.DueAt.ToString("dd MMM yyyy")
+                            </span>
+                        </td>
+                        <td>
+                            @if (loan.ReturnedAt.HasValue)
+                            {
+                                <span>@loan.ReturnedAt.Value.ToString("dd MMM yyyy")</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">Active Loan</span>
+                            }
+                        </td>
+                        <td>
+                            @switch (loan.LoanStatus)
+                            {
+                                case LoanStatus.Active:
+                                    <span class="badge bg-primary">Active</span>
+                                    break;
+                                case LoanStatus.Returned:
+                                    <span class="badge bg-success">Returned</span>
+                                    break;
+                                case LoanStatus.Lost:
+                                    <span class="badge bg-danger">Reported Lost</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@loan.RenewalCount</span>
+                        </td>
+                        <td>
+                            @if (loan.FineAmount.HasValue && loan.FineAmount.Value > 0)
+                            {
+                                <div class="fw-semibold text-danger">₹@loan.FineAmount.Value.ToString("N2")</div>
+                                <span class="badge @(loan.FineStatus == FineStatus.Paid ? "bg-success" : loan.FineStatus == FineStatus.Waived ? "bg-secondary" : "bg-danger") font-monospace small">
+                                    @loan.FineStatus
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">₹0.00</span>
+                            }
+                        </td>
+                        <td class="small text-muted">
+                            <div>Issued: @loan.IssuedBy</div>
+                            @if (!string.IsNullOrEmpty(loan.ReceivedBy))
+                            {
+                                <div>Returned: @loan.ReceivedBy</div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

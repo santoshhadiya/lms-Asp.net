@@ -1,0 +1,216 @@
+@model College_Library_Management_System.ViewModels.Circulation.IssueBookViewModel
+@{
+    ViewData["Title"] = "Issue Book to Student";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card-custom">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-box-arrow-up-right"></i> Issue Book to Student</span>
+                <a asp-action="ActiveLoans" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Active Loans
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Informational banner with library borrowing policies -->
+                <div class="alert alert-light border mb-4">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="bi bi-shield-check text-primary me-2 fs-5"></i>
+                        <span class="fw-bold">Library Circulation Policy:</span>
+                    </div>
+                    <ul class="mb-0 small text-muted ps-3">
+                        <li>Maximum <strong>3 books</strong> per student at any given time.</li>
+                        <li>Standard loan period: <strong>14 calendar days</strong>.</li>
+                        <li>Students with any unreturned overdue books are <strong>strictly blocked</strong> from borrowing new books until overdue items are returned.</li>
+                    </ul>
+                </div>
+
+                <form asp-action="Issue" method="post" id="issueForm">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <!-- Step 1: Student Lookup -->
+                    <div class="card border rounded mb-3 bg-light p-3">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-person-badge me-1"></i> 1. Student Identification</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-8">
+                                <label asp-for="StudentEnrollment" class="form-label small fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
+                                    <input asp-for="StudentEnrollment" class="form-control font-monospace text-uppercase" placeholder="e.g. EN2026001" id="enrollmentInput" required />
+                                </div>
+                                <span asp-validation-for="StudentEnrollment" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mt-md-4 pt-md-2">
+                                <button type="button" class="btn btn-outline-primary w-100" id="btnVerifyEligibility">
+                                    <i class="bi bi-search me-1"></i> Verify Eligibility
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Student Preview Banner -->
+                        <div id="studentPreview" class="mt-3 p-3 bg-white border rounded d-none">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" id="previewStudentName">Student Name</div>
+                                    <div class="small text-muted" id="previewStudentDept">Department</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary" id="previewActiveLoansCount">0 / 3 Books</span>
+                                    <div id="previewOverdueAlert" class="small text-danger fw-bold mt-1 d-none">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> Overdue books present!
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Book Copy Lookup -->
+                    <div class="card border rounded mb-3 bg-light p-3">
+                        <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-book me-1"></i> 2. Book Copy Identification</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-8">
+                                <label asp-for="AccessionNumber" class="form-label small fw-semibold"></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white"><i class="bi bi-upc-scan"></i></span>
+                                    <input asp-for="AccessionNumber" class="form-control font-monospace text-uppercase" placeholder="e.g. ACC-0001" id="accessionInput" required />
+                                </div>
+                                <span asp-validation-for="AccessionNumber" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-4 mt-md-4 pt-md-2">
+                                <button type="button" class="btn btn-outline-primary w-100" id="btnCheckCopy">
+                                    <i class="bi bi-box-seam me-1"></i> Check Copy
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Copy Preview Banner -->
+                        <div id="copyPreview" class="mt-3 p-3 bg-white border rounded d-none">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold" id="previewBookTitle">Book Title</div>
+                                    <div class="small text-muted" id="previewShelf">Shelf Location</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success" id="previewCopyStatus">Available</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Loan Parameters -->
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="LoanPeriodDays" class="form-label fw-semibold"></label>
+                            <input asp-for="LoanPeriodDays" class="form-control" type="number" min="1" max="90" id="loanDaysInput" />
+                            <span asp-validation-for="LoanPeriodDays" class="text-danger small"></span>
+                            <div class="form-text">Standard policy is 14 days.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Scheduled Due Date</label>
+                            <input type="text" class="form-control bg-light font-monospace" id="previewDueDate" readonly />
+                            <div class="form-text text-muted">Auto-calculated based on loan days.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Remarks" class="form-label fw-semibold"></label>
+                            <input asp-for="Remarks" class="form-control" placeholder="Optional circulation notes or remarks..." maxlength="250" />
+                            <span asp-validation-for="Remarks" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Eligibility Alert Box -->
+                    <div id="eligibilityMessage" class="alert d-none mb-3 py-2 small" role="alert"></div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a asp-action="ActiveLoans" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary-library" id="btnSubmitIssue">
+                            <i class="bi bi-check2-circle me-1"></i> Confirm & Issue Book
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function calculateDueDate() {
+            const days = parseInt(document.getElementById('loanDaysInput').value) || 14;
+            const now = new Date();
+            now.setDate(now.getDate() + days);
+            const options = { day: '2-digit', month: 'short', year: 'numeric' };
+            document.getElementById('previewDueDate').value = now.toLocaleDateString('en-GB', options);
+        }
+
+        async function verifyEligibility() {
+            const enrollment = document.getElementById('enrollmentInput').value.trim();
+            const accession = document.getElementById('accessionInput').value.trim();
+            const alertBox = document.getElementById('eligibilityMessage');
+            const submitBtn = document.getElementById('btnSubmitIssue');
+
+            if (!enrollment && !accession) {
+                alertBox.className = 'alert alert-warning py-2 small';
+                alertBox.textContent = 'Please enter student enrollment number or accession number to verify.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Circulation/CheckEligibility?enrollment=${encodeURIComponent(enrollment)}&accession=${encodeURIComponent(accession)}`);
+                const data = await response.json();
+
+                // Update Student Preview
+                if (data.studentId) {
+                    document.getElementById('studentPreview').classList.remove('d-none');
+                    document.getElementById('previewStudentName').textContent = data.studentName;
+                    document.getElementById('previewStudentDept').textContent = data.departmentName + ' (' + data.enrollmentNumber + ')';
+                    document.getElementById('previewActiveLoansCount').textContent = data.currentActiveLoans + ' / ' + data.maxAllowedLoans + ' Books';
+                    
+                    if (data.hasOverdueLoans) {
+                        document.getElementById('previewOverdueAlert').classList.remove('d-none');
+                    } else {
+                        document.getElementById('previewOverdueAlert').classList.add('d-none');
+                    }
+                }
+
+                // Update Book Preview
+                if (data.bookCopyId) {
+                    document.getElementById('copyPreview').classList.remove('d-none');
+                    document.getElementById('previewBookTitle').textContent = data.bookTitle;
+                    document.getElementById('previewShelf').textContent = 'Shelf: ' + data.shelfLocation + ' (' + data.accessionNumber + ')';
+                    const statusSpan = document.getElementById('previewCopyStatus');
+                    statusSpan.textContent = data.copyStatus === 0 ? 'Available' : 'Unavailable (' + data.copyStatus + ')';
+                    statusSpan.className = data.copyStatus === 0 ? 'badge bg-success' : 'badge bg-danger';
+                }
+
+                // Status message
+                alertBox.classList.remove('d-none');
+                if (data.isEligible) {
+                    alertBox.className = 'alert alert-success py-2 small';
+                    alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + data.message;
+                    submitBtn.disabled = false;
+                } else {
+                    alertBox.className = 'alert alert-danger py-2 small';
+                    alertBox.innerHTML = '<i class="bi bi-exclamation-octagon-fill me-1"></i> ' + data.message;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        document.getElementById('loanDaysInput').addEventListener('input', calculateDueDate);
+        document.getElementById('btnVerifyEligibility').addEventListener('click', verifyEligibility);
+        document.getElementById('btnCheckCopy').addEventListener('click', verifyEligibility);
+        
+        calculateDueDate();
+        if (document.getElementById('enrollmentInput').value || document.getElementById('accessionInput').value) {
+            verifyEligibility();
+        }
+    </script>
+}

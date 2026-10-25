@@ -1,0 +1,93 @@
+@model College_Library_Management_System.ViewModels.Books.BookFormViewModel
+@{
+    ViewData["Title"] = "Edit Book in Catalog";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-10 col-lg-8">
+        <div class="card-custom">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-pencil-square"></i> Edit Book Details</span>
+                <a asp-action="Details" asp-route-id="@Model.BookId" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Details
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <form asp-action="Edit" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="BookId" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Title" class="form-label fw-semibold"></label>
+                            <input asp-for="Title" class="form-control" maxlength="250" required />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ISBN" class="form-label fw-semibold"></label>
+                            <input asp-for="ISBN" class="form-control font-monospace" maxlength="20" />
+                            <span asp-validation-for="ISBN" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PublicationYear" class="form-label fw-semibold"></label>
+                            <input asp-for="PublicationYear" class="form-control" type="number" min="1000" max="2100" />
+                            <span asp-validation-for="PublicationYear" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label fw-semibold"></label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="Model.CategoryOptions" required></select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PublisherId" class="form-label fw-semibold"></label>
+                            <select asp-for="PublisherId" class="form-select" asp-items="Model.PublisherOptions" required></select>
+                            <span asp-validation-for="PublisherId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Contributing Authors <span class="text-danger">*</span>
+                            </label>
+                            <div class="border rounded p-3 bg-light" style="max-height: 180px; overflow-y: auto;">
+                                @foreach (var author in Model.AuthorOptions)
+                                {
+                                    var isChecked = Model.SelectedAuthorIds?.Contains(int.Parse(author.Value)) ?? false;
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="SelectedAuthorIds" value="@author.Value" id="author_@author.Value" @(isChecked ? "checked" : "")>
+                                        <label class="form-check-label" for="author_@author.Value">
+                                            @author.Text
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <span asp-validation-for="SelectedAuthorIds" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label fw-semibold"></label>
+                            <textarea asp-for="Description" class="form-control" rows="3" maxlength="1000"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a asp-action="Details" asp-route-id="@Model.BookId" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary-library">
+                            <i class="bi bi-check-lg me-1"></i> Update Catalog Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

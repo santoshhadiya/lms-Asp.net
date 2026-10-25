@@ -1,0 +1,84 @@
+@{
+    ViewData["Title"] = "Reports & Analytics Center";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">Reports & Analytics Hub</h2>
+        <p class="text-muted small mb-0">Generate operational insights, overdue notices, inventory summaries, and compliance audit logs.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Overdue Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom h-100 p-3 d-flex flex-column justify-content-between border-danger-subtle">
+            <div>
+                <div class="p-3 bg-danger-subtle rounded text-danger d-inline-block mb-3">
+                    <i class="bi bi-calendar-x-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Overdue Books</h5>
+                <p class="text-muted small mb-3">
+                    Filter and export list of overdue unreturned loans across departments with contact numbers and calculated late fees.
+                </p>
+            </div>
+            <a asp-action="Overdue" class="btn btn-outline-danger w-100">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i> View Overdue Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Inventory Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom h-100 p-3 d-flex flex-column justify-content-between border-primary-subtle">
+            <div>
+                <div class="p-3 bg-primary-subtle rounded text-primary d-inline-block mb-3">
+                    <i class="bi bi-boxes fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Inventory Status</h5>
+                <p class="text-muted small mb-3">
+                    Categorical breakdown of physical book copies by shelf availability, active circulation, and damaged or withdrawn assets.
+                </p>
+            </div>
+            <a asp-action="Inventory" class="btn btn-outline-primary w-100">
+                <i class="bi bi-pie-chart me-1"></i> View Inventory Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Collections Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom h-100 p-3 d-flex flex-column justify-content-between border-success-subtle">
+            <div>
+                <div class="p-3 bg-success-subtle rounded text-success d-inline-block mb-3">
+                    <i class="bi bi-cash-stack fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Fine Collections</h5>
+                <p class="text-muted small mb-3">
+                    Financial collection ledger showing offline receipt records, payment modes, cashier accountability, and date range totals.
+                </p>
+            </div>
+            <a asp-action="Collections" class="btn btn-outline-success w-100">
+                <i class="bi bi-receipt-cutoff me-1"></i> View Collections Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Audit Log Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card-custom h-100 p-3 d-flex flex-column justify-content-between border-secondary-subtle">
+            <div>
+                <div class="p-3 bg-secondary-subtle rounded text-secondary d-inline-block mb-3">
+                    <i class="bi bi-shield-check fs-3"></i>
+                </div>
+                <h5 class="fw-bold mb-2">System Audit Trail</h5>
+                <p class="text-muted small mb-3">
+                    Immutable security log of all circulation events, student edits, fine payments, waivers, and inventory updates.
+                </p>
+            </div>
+            <a asp-action="AuditLogs" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-journal-text me-1"></i> View Audit Trail
+            </a>
+        </div>
+    </div>
+</div>

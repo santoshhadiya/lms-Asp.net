@@ -1,0 +1,209 @@
+@using College_Library_Management_System.Services.Common
+@using Microsoft.AspNetCore.Identity
+@inject IDateTimeProvider DateTimeProvider
+@inject UserManager<College_Library_Management_System.Models.ApplicationUser> UserManager
+@inject SignInManager<College_Library_Management_System.Models.ApplicationUser> SignInManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - College Library Management System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar">
+            <a href="/" class="sidebar-brand">
+                <i class="bi bi-book-half"></i>
+                <span>College Library</span>
+            </a>
+
+            <div class="sidebar-menu overflow-auto flex-grow-1 py-2">
+                <div class="nav-section-title">Core Operations</div>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="nav-section-title">Library Catalog</div>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Books" ? "active" : "")" asp-controller="Books" asp-action="Index">
+                    <i class="bi bi-journal-bookmark-fill"></i>
+                    <span>Book Catalog</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BookCopies" ? "active" : "")" asp-controller="BookCopies" asp-action="Index">
+                    <i class="bi bi-boxes"></i>
+                    <span>Physical Copies</span>
+                </a>
+
+                <div class="nav-section-title">Circulation</div>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "ActiveLoans" ? "active" : "")" asp-controller="Circulation" asp-action="ActiveLoans">
+                    <i class="bi bi-arrow-left-right"></i>
+                    <span>Active Loans</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Issue" ? "active" : "")" asp-controller="Circulation" asp-action="Issue">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                    <span>Issue Book</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Return" ? "active" : "")" asp-controller="Circulation" asp-action="Return">
+                    <i class="bi bi-box-arrow-in-down"></i>
+                    <span>Return Book</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Fines" ? "active" : "")" asp-controller="Fines" asp-action="Index">
+                    <i class="bi bi-currency-rupee"></i>
+                    <span>Fines & Receipts</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")" asp-controller="Students" asp-action="Index">
+                    <i class="bi bi-person-badge-fill"></i>
+                    <span>Student Registry</span>
+                </a>
+
+                <div class="nav-section-title">Master Data</div>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Departments" ? "active" : "")" asp-controller="Departments" asp-action="Index">
+                    <i class="bi bi-building"></i>
+                    <span>Departments</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")" asp-controller="Categories" asp-action="Index">
+                    <i class="bi bi-tags-fill"></i>
+                    <span>Categories</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Authors" ? "active" : "")" asp-controller="Authors" asp-action="Index">
+                    <i class="bi bi-pen-fill"></i>
+                    <span>Authors</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Publishers" ? "active" : "")" asp-controller="Publishers" asp-action="Index">
+                    <i class="bi bi-printer-fill"></i>
+                    <span>Publishers</span>
+                </a>
+
+                <div class="nav-section-title">Reports & Analytics</div>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                    <i class="bi bi-file-earmark-bar-graph"></i>
+                    <span>Reports Hub</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Overdue" ? "active" : "")" asp-controller="Reports" asp-action="Overdue">
+                    <i class="bi bi-calendar-x"></i>
+                    <span>Overdue Books</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Collections" ? "active" : "")" asp-controller="Reports" asp-action="Collections">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <span>Financial Collections</span>
+                </a>
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")" asp-controller="Reports" asp-action="AuditLogs">
+                    <i class="bi bi-shield-check"></i>
+                    <span>System Audit Trail</span>
+                </a>
+            </div>
+
+            <div class="p-3 border-top border-secondary-subtle small text-muted">
+                <div>Library Time (IST):</div>
+                <div class="fw-semibold text-light">@DateTimeProvider.Now.ToString("dd MMM yyyy")</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div id="main-wrapper">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle-btn d-lg-none" type="button" onclick="toggleSidebar()">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <h1 class="topbar-title">@(ViewData["Title"] ?? "Dashboard")</h1>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="library-clock d-none d-md-flex">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        <span>@DateTimeProvider.Now.ToString("dd MMM yyyy, hh:mm tt") (IST)</span>
+                    </div>
+
+                    @{
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        var roles = currentUser != null ? await UserManager.GetRolesAsync(currentUser) : new List<string>();
+                        var primaryRole = roles.FirstOrDefault() ?? "Staff";
+                        var initials = !string.IsNullOrEmpty(currentUser?.FullName) ? currentUser.FullName[0].ToString().ToUpper() : "U";
+                    }
+
+                    <div class="user-badge dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle text-dark" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="user-avatar me-2">@initials</div>
+                            <div class="d-none d-sm-block text-start me-1">
+                                <div class="fw-semibold small leading-none">@(currentUser?.FullName ?? User.Identity?.Name)</div>
+                                <span class="badge @(primaryRole == "Admin" ? "bg-danger" : "bg-primary")" style="font-size: 0.68rem;">@primaryRole</span>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenuDropdown">
+                            <li class="px-3 py-2 border-bottom">
+                                <div class="fw-bold small">@(currentUser?.FullName)</div>
+                                <div class="text-muted small">@currentUser?.Email</div>
+                            </li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="p-1">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        <span>Sign Out</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Alerts Container -->
+            <main class="content-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success alert-custom alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+                        <div class="flex-grow-1">@TempData["Success"]</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger alert-custom alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+                        <div class="flex-grow-1">@TempData["Error"]</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                @RenderBody()
+            </main>
+        </div>
+    }
+    else
+    {
+        <!-- Anonymous View (e.g. Login) -->
+        <div class="w-100 min-vh-100 d-flex flex-column">
+            <main role="main" class="flex-grow-1">
+                @RenderBody()
+            </main>
+        </div>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        function toggleSidebar() {
+            var sidebar = document.getElementById('sidebar');
+            var backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar) sidebar.classList.toggle('show');
+            if (backdrop) backdrop.classList.toggle('show');
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

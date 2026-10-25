@@ -1,0 +1,79 @@
+@model College_Library_Management_System.ViewModels.Fines.WaiveFineViewModel
+@{
+    ViewData["Title"] = "Waive Library Fine - Admin Authorization";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-custom">
+            <div class="card-header bg-danger text-white">
+                <span class="card-title text-white"><i class="bi bi-shield-lock-fill"></i> Admin Fine Waiver Authorization</span>
+                <a asp-action="Index" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="alert alert-danger-subtle border border-danger d-flex align-items-center mb-4">
+                    <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-danger"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Administrative Override Notice</h6>
+                        <p class="mb-0 small">
+                            Waiving a fine permanently cancels the student's financial obligation. This action is permanently audited under your administrator account. A detailed justification must be provided.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded border mb-4">
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Student</span>
+                            <div class="fw-bold">@Model.StudentName</div>
+                            <span class="font-monospace small text-muted">@Model.StudentEnrollment</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Waivable Balance</span>
+                            <span class="fw-bold fs-5 text-danger">₹@Model.RemainingBalance.ToString("N2")</span>
+                        </div>
+                        <div class="col-12 mt-2 pt-2 border-top">
+                            <span class="text-muted small d-block">Book Title</span>
+                            <span class="fw-semibold">@Model.BookTitle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="Waive" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="FineId" />
+                    <input type="hidden" asp-for="StudentEnrollment" />
+                    <input type="hidden" asp-for="StudentName" />
+                    <input type="hidden" asp-for="BookTitle" />
+                    <input type="hidden" asp-for="FineAmount" />
+                    <input type="hidden" asp-for="RemainingBalance" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="WaiverReason" class="form-label fw-semibold">
+                            Administrative Justification <span class="text-danger">*</span>
+                        </label>
+                        <textarea asp-for="WaiverReason" class="form-control" rows="4" placeholder="Specify valid institutional reason (e.g. Medical emergency certificate verified by Dean, College sports tournament leave approved by Director, System clock correction)" maxlength="500" required></textarea>
+                        <span asp-validation-for="WaiverReason" class="text-danger small"></span>
+                        <div class="form-text">Must be at least 10 characters long. Recorded in system audit logs.</div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-slash-circle me-1"></i> Authorize & Waive Fine
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

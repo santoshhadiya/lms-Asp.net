@@ -1,0 +1,221 @@
+@using College_Library_Management_System.Models.Enums
+@using College_Library_Management_System.ViewModels.Fines
+@model College_Library_Management_System.ViewModels.Common.PaginatedList<FineListItemViewModel>
+@{
+    ViewData["Title"] = "Fines & Payments Management";
+    var filter = (FineListFilterViewModel)ViewBag.Filter;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">Library Fines & Collections</h2>
+        <p class="text-muted small mb-0">Monitor overdue late fees, collect offline payments in full, and generate receipts.</p>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card-custom mb-3">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Index" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Search Fines</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" class="form-control" placeholder="Student, Enrollment, Receipt #, Accession..." value="@filter.SearchTerm" />
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Status</label>
+                <select name="Status" class="form-select">
+                    <option value="">All Statuses</option>
+                    @foreach (var val in Enum.GetValues<FineStatus>())
+                    {
+                        <option value="@val" selected="@(filter.Status == val ? "selected" : null)">@val</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Department</label>
+                <select name="DepartmentId" class="form-select" asp-items="filter.DepartmentOptions">
+                    <option value="">-- All Departments --</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-library flex-grow-1">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <a asp-action="Index" class="btn btn-light border" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Fines Table Card -->
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-receipt"></i> Fine Records & Transactions</span>
+        <span class="badge bg-secondary">Total: @Model.TotalCount records</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Student / Dept</th>
+                    <th>Book / Accession</th>
+                    <th>Assessed Date</th>
+                    <th>Fine Rate</th>
+                    <th>Amount</th>
+                    <th>Paid / Waived</th>
+                    <th>Remaining</th>
+                    <th>Status</th>
+                    <th>Receipt No.</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="10" class="text-center py-5 text-muted">
+                            <i class="bi bi-cash-coin fs-2 d-block mb-2 text-success"></i>
+                            No fine records matching selected criteria.
+                        </td>
+                    </tr>
+                }
+                @foreach (var fine in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@fine.StudentName</div>
+                            <span class="font-monospace small text-muted">@fine.StudentEnrollment</span>
+                            <span class="badge bg-light text-dark border ms-1 small">@fine.DepartmentCode</span>
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-truncate" style="max-width: 220px;" title="@fine.BookTitle">
+                                @fine.BookTitle
+                            </div>
+                            <span class="font-monospace small text-muted">@fine.AccessionNumber</span>
+                        </td>
+                        <td class="small">@fine.CalculatedAt.ToString("dd MMM yyyy")</td>
+                        <td class="small font-monospace">₹@fine.DailyFineRate.ToString("N2")/day</td>
+                        <td class="fw-bold">₹@fine.FineAmount.ToString("N2")</td>
+                        <td class="small">
+                            @if (fine.AmountPaid > 0)
+                            {
+                                <span class="text-success fw-semibold">₹@fine.AmountPaid.ToString("N2")</span>
+                            }
+                            else if (fine.WaivedAmount > 0)
+                            {
+                                <span class="text-secondary fw-semibold">Waived: ₹@fine.WaivedAmount.ToString("N2")</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">₹0.00</span>
+                            }
+                        </td>
+                        <td>
+                            @if (fine.RemainingBalance > 0)
+                            {
+                                <span class="fw-bold text-danger">₹@fine.RemainingBalance.ToString("N2")</span>
+                            }
+                            else
+                            {
+                                <span class="text-success small fw-semibold"><i class="bi bi-check2"></i> Cleared</span>
+                            }
+                        </td>
+                        <td>
+                            @switch (fine.Status)
+                            {
+                                case FineStatus.Pending:
+                                    <span class="badge bg-danger">Pending</span>
+                                    break;
+                                case FineStatus.Paid:
+                                    <span class="badge bg-success">Paid</span>
+                                    break;
+                                case FineStatus.Waived:
+                                    <span class="badge bg-secondary">Waived</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="font-monospace small">
+                            @if (!string.IsNullOrEmpty(fine.ReceiptNumber))
+                            {
+                                <a asp-action="Receipt" asp-route-receiptNumber="@fine.ReceiptNumber" class="text-primary text-decoration-none fw-bold" title="View Printable Receipt">
+                                    <i class="bi bi-file-earmark-text me-1"></i>@fine.ReceiptNumber
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                @if (fine.Status == FineStatus.Pending)
+                                {
+                                    <a asp-action="CollectPayment" asp-route-id="@fine.FineId" class="btn btn-outline-success" title="Collect Offline Payment">
+                                        <i class="bi bi-cash-coin me-1"></i> Pay
+                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="Waive" asp-route-id="@fine.FineId" class="btn btn-outline-secondary" title="Waive Fine (Admin Only)">
+                                            <i class="bi bi-slash-circle"></i>
+                                        </a>
+                                    }
+                                }
+                                else if (fine.Status == FineStatus.Paid && !string.IsNullOrEmpty(fine.ReceiptNumber))
+                                {
+                                    <a asp-action="Receipt" asp-route-receiptNumber="@fine.ReceiptNumber" class="btn btn-outline-primary" title="View Receipt">
+                                        <i class="bi bi-printer me-1"></i> Receipt
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+            <span class="small text-muted">
+                Showing page <strong>@Model.PageIndex</strong> of <strong>@Model.TotalPages</strong> (@Model.TotalCount total records)
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-searchTerm="@filter.SearchTerm"
+                       asp-route-status="@filter.Status"
+                       asp-route-departmentId="@filter.DepartmentId">Previous</a>
+                </li>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.PageIndex ? "active" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-pageNumber="@p"
+                           asp-route-searchTerm="@filter.SearchTerm"
+                           asp-route-status="@filter.Status"
+                           asp-route-departmentId="@filter.DepartmentId">@p</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-searchTerm="@filter.SearchTerm"
+                       asp-route-status="@filter.Status"
+                       asp-route-departmentId="@filter.DepartmentId">Next</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>

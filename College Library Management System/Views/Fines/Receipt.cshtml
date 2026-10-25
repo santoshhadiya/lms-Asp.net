@@ -1,0 +1,139 @@
+@model College_Library_Management_System.ViewModels.Fines.FineReceiptViewModel
+@{
+    ViewData["Title"] = "Receipt - " + Model.ReceiptNumber;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7">
+        <div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+            <a asp-action="Index" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Fines
+            </a>
+            <button type="button" class="btn btn-primary-library" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Print Receipt
+            </button>
+        </div>
+
+        <!-- Printable Receipt Voucher -->
+        <div class="card shadow-sm border p-4 bg-white print-area">
+            <!-- Header -->
+            <div class="text-center pb-3 border-bottom mb-4">
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
+                    <i class="bi bi-bank2 fs-2 text-primary"></i>
+                    <h4 class="fw-bold mb-0 text-dark">COLLEGE CENTRAL LIBRARY</h4>
+                </div>
+                <div class="small text-muted text-uppercase fw-semibold">Circulation & Fine Management Section</div>
+                <div class="small text-muted">Library Administration Building, Campus Central</div>
+                <div class="mt-2">
+                    <span class="badge bg-success-subtle text-success border border-success px-3 py-1 fs-6">
+                        OFFICIAL PAYMENT RECEIPT
+                    </span>
+                </div>
+            </div>
+
+            <!-- Receipt Meta Info -->
+            <div class="row g-2 mb-4 pb-3 border-bottom small">
+                <div class="col-6">
+                    <span class="text-muted d-block">Receipt Number:</span>
+                    <strong class="font-monospace fs-6 text-primary">@Model.ReceiptNumber</strong>
+                </div>
+                <div class="col-6 text-end">
+                    <span class="text-muted d-block">Date & Time (IST):</span>
+                    <strong>@Model.PaymentDate.ToString("dd MMM yyyy, hh:mm tt")</strong>
+                </div>
+            </div>
+
+            <!-- Student & Book Details -->
+            <div class="row g-3 mb-4">
+                <div class="col-sm-6">
+                    <div class="p-3 bg-light rounded border h-100">
+                        <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Student Details</span>
+                        <div class="fw-bold fs-6">@Model.StudentName</div>
+                        <div class="small text-muted font-monospace">Enrollment: @Model.StudentEnrollment</div>
+                        <div class="small text-muted">Department: @Model.DepartmentName</div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="p-3 bg-light rounded border h-100">
+                        <span class="text-muted small text-uppercase fw-semibold d-block mb-1">Circulation Item</span>
+                        <div class="fw-bold fs-6 text-truncate" title="@Model.BookTitle">@Model.BookTitle</div>
+                        <div class="small text-muted font-monospace">Accession No: @Model.AccessionNumber</div>
+                        <div class="small text-muted">Rate Applied: ₹@Model.DailyFineRate.ToString("N2")/day</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Breakdown Table -->
+            <table class="table table-bordered mb-4">
+                <thead class="table-light">
+                    <tr>
+                        <th>Description</th>
+                        <th class="text-center">Overdue Days</th>
+                        <th class="text-center">Rate</th>
+                        <th class="text-end">Amount (INR)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <strong>Library Overdue Fine Settlement</strong>
+                            <div class="small text-muted">Paid in full via @Model.PaymentMethod</div>
+                            @if (!string.IsNullOrEmpty(Model.Remarks))
+                            {
+                                <div class="small text-muted font-italic">Note: @Model.Remarks</div>
+                            }
+                        </td>
+                        <td class="text-center align-middle">@Model.OverdueDays</td>
+                        <td class="text-center align-middle font-monospace">₹@Model.DailyFineRate.ToString("N2")</td>
+                        <td class="text-end align-middle font-monospace fw-bold fs-6">₹@Model.AmountPaid.ToString("N2")</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td colspan="3" class="text-end fw-bold">Total Amount Paid:</td>
+                        <td class="text-end fw-bold text-success font-monospace fs-5">₹@Model.AmountPaid.ToString("N2")</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Signatures & Footer -->
+            <div class="row pt-4 mt-2">
+                <div class="col-6">
+                    <div class="small text-muted">Payment Mode:</div>
+                    <span class="badge bg-secondary font-monospace">@Model.PaymentMethod (Offline)</span>
+                    <div class="small text-muted mt-2">Generated by System. No digital signature needed.</div>
+                </div>
+                <div class="col-6 text-end">
+                    <div style="height: 40px;"></div>
+                    <div class="border-top pt-1 d-inline-block" style="min-width: 180px;">
+                        <div class="small fw-bold">@Model.ReceivedByStaffName</div>
+                        <div class="small text-muted">Library Authorized Cashier</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4 pt-3 border-top small text-muted">
+                Thank you for using the Central Library. Please keep this receipt for your records.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .print-area, .print-area * {
+            visibility: visible;
+        }
+        .print-area {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+    }
+</style>

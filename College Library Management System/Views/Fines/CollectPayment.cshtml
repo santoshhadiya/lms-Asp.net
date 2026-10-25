@@ -1,0 +1,112 @@
+@using College_Library_Management_System.Models.Enums
+@model College_Library_Management_System.ViewModels.Fines.CollectFinePaymentViewModel
+@{
+    ViewData["Title"] = "Collect Fine Payment - " + Model.StudentEnrollment;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-9 col-lg-7">
+        <div class="card-custom">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-cash-stack"></i> Collect Offline Fine Payment</span>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Fines
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Fine Summary Card -->
+                <div class="p-3 bg-light rounded border mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-secondary font-monospace fs-6 px-3 py-2">@Model.AccessionNumber</span>
+                        <span class="badge bg-danger fs-6 px-3 py-2">Balance Due: ₹@Model.RemainingBalance.ToString("N2")</span>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <span class="text-muted small d-block">Book Title</span>
+                            <span class="fw-bold fs-6">@Model.BookTitle</span>
+                        </div>
+
+                        <div class="col-sm-6 mt-3">
+                            <span class="text-muted small d-block">Student</span>
+                            <div class="fw-semibold">@Model.StudentName</div>
+                            <div class="small font-monospace text-muted">@Model.StudentEnrollment (@Model.DepartmentName)</div>
+                        </div>
+
+                        <div class="col-sm-6 mt-3">
+                            <span class="text-muted small d-block">Circulation Dates</span>
+                            <div class="small">Issued: <strong>@Model.LoanIssuedAt.ToString("dd MMM yyyy")</strong></div>
+                            <div class="small">Due: <strong>@Model.LoanDueAt.ToString("dd MMM yyyy")</strong></div>
+                            @if (Model.LoanReturnedAt.HasValue)
+                            {
+                                <div class="small">Returned: <strong>@Model.LoanReturnedAt.Value.ToString("dd MMM yyyy")</strong></div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Policy Requirement Alert -->
+                <div class="alert alert-warning border-warning d-flex align-items-center mb-4">
+                    <i class="bi bi-shield-exclamation fs-3 me-3 text-warning"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">Strict Full Offline Payment Policy</h6>
+                        <p class="mb-0 small">
+                            In accordance with college library policy, fine payments must be collected in full in a single transaction. Partial installments are prohibited. An official numbered payment receipt will be generated automatically upon submission.
+                        </p>
+                    </div>
+                </div>
+
+                <form asp-action="CollectPayment" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="FineId" />
+                    <input type="hidden" asp-for="StudentEnrollment" />
+                    <input type="hidden" asp-for="StudentName" />
+                    <input type="hidden" asp-for="DepartmentName" />
+                    <input type="hidden" asp-for="BookTitle" />
+                    <input type="hidden" asp-for="AccessionNumber" />
+                    <input type="hidden" asp-for="FineAmount" />
+                    <input type="hidden" asp-for="RemainingBalance" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="PaymentAmount" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light fw-bold">₹</span>
+                                <input asp-for="PaymentAmount" class="form-control fw-bold font-monospace fs-5 text-success" readonly />
+                            </div>
+                            <span asp-validation-for="PaymentAmount" class="text-danger small"></span>
+                            <div class="form-text">Exact full balance required.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="PaymentMethod" class="form-label fw-semibold"></label>
+                            <select asp-for="PaymentMethod" class="form-select" asp-items="Html.GetEnumSelectList<PaymentMethod>()" required>
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Remarks" class="form-label fw-semibold"></label>
+                            <input asp-for="Remarks" class="form-control" placeholder="Counter receipt note, bank reference no., cashier comment..." maxlength="250" />
+                            <span asp-validation-for="Remarks" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i> Confirm Payment & Issue Receipt
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

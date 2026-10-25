@@ -1,0 +1,199 @@
+@using College_Library_Management_System.ViewModels.Circulation
+@model College_Library_Management_System.ViewModels.Common.PaginatedList<ActiveLoanListItemViewModel>
+@{
+    ViewData["Title"] = "Active Circulation Loans";
+    var filter = (ActiveLoanListFilterViewModel)ViewBag.Filter;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">Active Book Loans</h2>
+        <p class="text-muted small mb-0">Track all currently issued books, monitor due dates, and manage returns and renewals.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Return" class="btn btn-outline-secondary">
+            <i class="bi bi-box-arrow-in-down me-1"></i> Quick Return
+        </a>
+        <a asp-action="Issue" class="btn btn-primary-library">
+            <i class="bi bi-box-arrow-up-right me-1"></i> Issue Book
+        </a>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card-custom mb-3">
+    <div class="card-body p-3">
+        <form method="get" asp-action="ActiveLoans" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Search Loans</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="SearchTerm" class="form-control" placeholder="Student, Enrollment, Accession, Title..." value="@filter.SearchTerm" />
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Department</label>
+                <select name="DepartmentId" class="form-select" asp-items="filter.DepartmentOptions">
+                    <option value="">-- All Departments --</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-check mt-md-4">
+                    <input class="form-check-input" type="checkbox" name="OverdueOnly" value="true" id="overdueOnlyCheck" @(filter.OverdueOnly ? "checked" : "") />
+                    <label class="form-check-label fw-semibold text-danger small" for="overdueOnlyCheck">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Overdue Loans Only
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-library flex-grow-1">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+                <a asp-action="ActiveLoans" class="btn btn-light border" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loans Table Card -->
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-arrow-left-right"></i> Current Active Borrowers</span>
+        <span class="badge bg-secondary">Total: @Model.TotalCount loans</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Accession / Book</th>
+                    <th>Borrower Student</th>
+                    <th>Dept</th>
+                    <th>Issued On</th>
+                    <th>Due Date</th>
+                    <th>Renewals</th>
+                    <th>Overdue / Late Fee</th>
+                    <th>Issued By</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-journal-check fs-2 d-block mb-2 text-success"></i>
+                            @(filter.OverdueOnly ? "Great! No overdue book loans currently found." : "No active book loans matching criteria.")
+                        </td>
+                    </tr>
+                }
+                @foreach (var loan in Model)
+                {
+                    <tr class="@(loan.IsOverdue ? "table-danger-subtle border-start border-danger border-4" : "")">
+                        <td>
+                            <a asp-controller="BookCopies" asp-action="History" asp-route-id="@loan.BookCopyId" class="font-monospace fw-bold text-primary text-decoration-none">
+                                @loan.AccessionNumber
+                            </a>
+                            <div class="small fw-semibold text-dark text-truncate" style="max-width: 240px;" title="@loan.BookTitle">
+                                @loan.BookTitle
+                            </div>
+                        </td>
+                        <td>
+                            <div class="fw-semibold">@loan.StudentName</div>
+                            <span class="font-monospace small text-muted">@loan.StudentEnrollment</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@loan.DepartmentCode</span>
+                        </td>
+                        <td class="small">@loan.IssuedAt.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <div class="fw-semibold @(loan.IsOverdue ? "text-danger" : "text-dark")">
+                                @loan.DueAt.ToString("dd MMM yyyy")
+                            </div>
+                            @if (loan.IsOverdue)
+                            {
+                                <span class="badge bg-danger small font-monospace">@loan.OverdueDays day(s) overdue</span>
+                            }
+                            else
+                            {
+                                var daysLeft = (loan.DueAt.Date - DateTime.Today).Days;
+                                <span class="badge bg-light text-muted border small font-monospace">@daysLeft days remaining</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge @(loan.RenewalCount > 0 ? "bg-info text-dark" : "bg-light text-muted border")">
+                                @loan.RenewalCount / 1
+                            </span>
+                        </td>
+                        <td>
+                            @if (loan.IsOverdue)
+                            {
+                                <div class="fw-bold text-danger">₹@loan.EstimatedFine.ToString("N2")</div>
+                                <span class="small text-muted font-monospace">₹5/day</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">₹0.00</span>
+                            }
+                        </td>
+                        <td class="small text-muted">@loan.IssuedBy</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a asp-action="Return" asp-route-id="@loan.LoanId" class="btn btn-outline-success" title="Return Book">
+                                    <i class="bi bi-box-arrow-in-down me-1"></i> Return
+                                </a>
+                                @if (!loan.IsOverdue && loan.RenewalCount < 1)
+                                {
+                                    <a asp-action="Renew" asp-route-id="@loan.LoanId" class="btn btn-outline-primary" title="Renew Book Loan">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+            <span class="small text-muted">
+                Showing page <strong>@Model.PageIndex</strong> of <strong>@Model.TotalPages</strong> (@Model.TotalCount total loans)
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" asp-action="ActiveLoans"
+                       asp-route-pageNumber="@(Model.PageIndex - 1)"
+                       asp-route-searchTerm="@filter.SearchTerm"
+                       asp-route-departmentId="@filter.DepartmentId"
+                       asp-route-overdueOnly="@filter.OverdueOnly">Previous</a>
+                </li>
+                @for (int p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.PageIndex ? "active" : "")">
+                        <a class="page-link" asp-action="ActiveLoans"
+                           asp-route-pageNumber="@p"
+                           asp-route-searchTerm="@filter.SearchTerm"
+                           asp-route-departmentId="@filter.DepartmentId"
+                           asp-route-overdueOnly="@filter.OverdueOnly">@p</a>
+                    </li>
+                }
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" asp-action="ActiveLoans"
+                       asp-route-pageNumber="@(Model.PageIndex + 1)"
+                       asp-route-searchTerm="@filter.SearchTerm"
+                       asp-route-departmentId="@filter.DepartmentId"
+                       asp-route-overdueOnly="@filter.OverdueOnly">Next</a>
+                </li>
+            </ul>
+        </div>
+    }
+</div>

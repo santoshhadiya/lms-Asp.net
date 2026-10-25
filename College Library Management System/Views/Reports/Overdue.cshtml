@@ -1,0 +1,145 @@
+@model College_Library_Management_System.ViewModels.Reports.OverdueReportFilterViewModel
+@{
+    ViewData["Title"] = "Overdue Books & Borrowers Report";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 d-print-none">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-danger">Overdue Books & Borrowers Report</h2>
+        <p class="text-muted small mb-0">Actionable list of all unreturned books past their due date with borrower contact info.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Reports Hub
+        </a>
+        <button type="button" class="btn btn-primary-library" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print / Export PDF
+        </button>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card-custom mb-3 d-print-none">
+    <div class="card-body p-3">
+        <form method="get" asp-action="Overdue" class="row g-2 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label small fw-semibold text-muted">Department</label>
+                <select name="DepartmentId" class="form-select" asp-items="Model.DepartmentOptions">
+                    <option value="">-- All Academic Departments --</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted">Minimum Days Overdue</label>
+                <input type="number" name="MinDaysOverdue" class="form-control" placeholder="e.g. 7 (days)" value="@Model.MinDaysOverdue" min="1" />
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-danger flex-grow-1">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-action="Overdue" class="btn btn-light border" title="Reset Filters">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Metrics Bar -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6">
+        <div class="p-3 bg-danger-subtle rounded border border-danger d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-danger small fw-semibold text-uppercase d-block">Total Overdue Items</span>
+                <span class="fs-4 fw-bold text-danger">@Model.TotalOverdueCount Books</span>
+            </div>
+            <i class="bi bi-exclamation-octagon-fill fs-1 text-danger opacity-50"></i>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="p-3 bg-warning-subtle rounded border border-warning d-flex justify-content-between align-items-center">
+            <div>
+                <span class="text-dark small fw-semibold text-uppercase d-block">Estimated Accrued Fines</span>
+                <span class="fs-4 fw-bold text-dark font-monospace">₹@Model.TotalEstimatedFine.ToString("N2")</span>
+            </div>
+            <i class="bi bi-currency-rupee fs-1 text-dark opacity-50"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Report Table -->
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title text-danger"><i class="bi bi-clock-history"></i> Overdue Loans Register</span>
+        <span class="badge bg-secondary font-monospace">@Model.Items.Count records</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Student Details</th>
+                    <th>Dept</th>
+                    <th>Contact Info</th>
+                    <th>Book Title / Accession</th>
+                    <th>Due Date</th>
+                    <th>Overdue</th>
+                    <th>Est. Fine</th>
+                    <th class="text-end d-print-none">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Items.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle-fill fs-2 d-block mb-2 text-success"></i>
+                            Excellent! No books are currently overdue under the specified filter criteria.
+                        </td>
+                    </tr>
+                }
+                @foreach (var item in Model.Items)
+                {
+                    <tr class="table-danger-subtle">
+                        <td>
+                            <div class="fw-bold">@item.StudentName</div>
+                            <span class="font-monospace small text-muted">@item.EnrollmentNumber</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@item.DepartmentCode</span>
+                        </td>
+                        <td class="small">
+                            @if (!string.IsNullOrEmpty(item.Phone))
+                            {
+                                <div><i class="bi bi-telephone me-1 text-muted"></i>@item.Phone</div>
+                            }
+                            @if (!string.IsNullOrEmpty(item.Email))
+                            {
+                                <div class="text-muted"><i class="bi bi-envelope me-1"></i>@item.Email</div>
+                            }
+                        </td>
+                        <td>
+                            <div class="fw-semibold text-truncate" style="max-width: 200px;" title="@item.BookTitle">@item.BookTitle</div>
+                            <span class="font-monospace small text-muted">@item.AccessionNumber (@item.ShelfLocation)</span>
+                        </td>
+                        <td class="text-danger fw-bold small">
+                            @item.DueAt.ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            <span class="badge bg-danger font-monospace">@item.OverdueDays day(s)</span>
+                        </td>
+                        <td class="fw-bold font-monospace text-danger">
+                            ₹@item.EstimatedFine.ToString("N2")
+                        </td>
+                        <td class="text-end d-print-none">
+                            <a asp-controller="Circulation" asp-action="Return" asp-route-id="@item.LoanId" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> Return
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

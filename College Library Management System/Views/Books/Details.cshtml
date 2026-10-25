@@ -1,0 +1,182 @@
+@model College_Library_Management_System.ViewModels.Books.BookDetailsViewModel
+@{
+    ViewData["Title"] = $"Book - {Model.Title}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-action="Index">Book Catalog</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Details</li>
+            </ol>
+        </nav>
+        <h2 class="h4 fw-bold mb-0 text-primary">@Model.Title</h2>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.BookId" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i> Edit Catalog Details
+        </a>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Book Metadata Card -->
+    <div class="col-lg-5">
+        <div class="card-custom h-100">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-book"></i> Catalog Information</span>
+            </div>
+
+            <div class="card-body">
+                <dl class="row small mb-0">
+                    <dt class="col-4 text-muted">Title:</dt>
+                    <dd class="col-8 fw-bold">@Model.Title</dd>
+
+                    <dt class="col-4 text-muted">ISBN:</dt>
+                    <dd class="col-8 font-monospace">@(string.IsNullOrEmpty(Model.ISBN) ? "N/A" : Model.ISBN)</dd>
+
+                    <dt class="col-4 text-muted">Authors:</dt>
+                    <dd class="col-8">
+                        @if (Model.Authors.Any())
+                        {
+                            @string.Join(", ", Model.Authors)
+                        }
+                        else
+                        {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </dd>
+
+                    <dt class="col-4 text-muted">Category:</dt>
+                    <dd class="col-8">
+                        <span class="badge bg-light text-dark border">@Model.CategoryName</span>
+                    </dd>
+
+                    <dt class="col-4 text-muted">Publisher:</dt>
+                    <dd class="col-8">@Model.PublisherName</dd>
+
+                    <dt class="col-4 text-muted">Year:</dt>
+                    <dd class="col-8">@(Model.PublicationYear?.ToString() ?? "N/A")</dd>
+
+                    <dt class="col-4 text-muted">Added On:</dt>
+                    <dd class="col-8">@Model.CreatedAt.ToString("dd MMM yyyy")</dd>
+
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <dt class="col-12 text-muted mt-2">Description / Summary:</dt>
+                        <dd class="col-12 mt-1 p-2 bg-light rounded text-secondary">@Model.Description</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Copies Summary -->
+    <div class="col-lg-7">
+        <div class="card-custom h-100">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="card-title"><i class="bi bi-boxes"></i> Physical Copies Inventory</span>
+                <div class="d-flex gap-2">
+                    <a asp-controller="BookCopies" asp-action="Create" asp-route-bookId="@Model.BookId" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Add Copy
+                    </a>
+                    <a asp-controller="BookCopies" asp-action="CreateBatch" asp-route-bookId="@Model.BookId" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-collection me-1"></i> Add Batch
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-2 text-center mb-4">
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Total Copies</div>
+                            <div class="fs-4 fw-bold text-dark">@Model.TotalCopies</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Available</div>
+                            <div class="fs-4 fw-bold text-success">@Model.AvailableCopies</div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Issued</div>
+                            <div class="fs-4 fw-bold text-primary">@Model.IssuedCopies</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Accession No.</th>
+                                <th>Shelf Location</th>
+                                <th>Status</th>
+                                <th>Current Borrower</th>
+                                <th>Condition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.Copies.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-inbox fs-4 d-block mb-1"></i>
+                                        No physical copies registered for this book yet.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var copy in Model.Copies)
+                            {
+                                <tr>
+                                    <td class="font-monospace fw-bold">@copy.AccessionNumber</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@copy.ShelfLocation</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var badgeClass = copy.Status switch
+                                            {
+                                                College_Library_Management_System.Models.Enums.BookCopyStatus.Available => "badge-available",
+                                                College_Library_Management_System.Models.Enums.BookCopyStatus.Issued => "badge-issued",
+                                                College_Library_Management_System.Models.Enums.BookCopyStatus.Damaged => "badge-damaged",
+                                                College_Library_Management_System.Models.Enums.BookCopyStatus.Lost => "badge-lost",
+                                                _ => "badge-withdrawn"
+                                            };
+                                        }
+                                        <span class="badge-status @badgeClass">
+                                            @copy.Status
+                                        </span>
+                                    </td>
+                                    <td class="small">
+                                        @if (!string.IsNullOrEmpty(copy.CurrentBorrowerName))
+                                        {
+                                            <div class="fw-semibold">@copy.CurrentBorrowerName</div>
+                                            @if (copy.DueDate.HasValue)
+                                            {
+                                                <div class="text-muted" style="font-size: 0.75rem;">Due: @copy.DueDate.Value.ToString("dd MMM yyyy")</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">-</span>
+                                        }
+                                    </td>
+                                    <td class="small text-muted">@(copy.ConditionNotes ?? "Good")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

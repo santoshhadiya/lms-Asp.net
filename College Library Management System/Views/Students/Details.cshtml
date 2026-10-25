@@ -1,0 +1,215 @@
+@model College_Library_Management_System.ViewModels.Students.StudentDetailsViewModel
+@{
+    ViewData["Title"] = $"Student - {Model.FullName}";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a asp-action="Index">Students</a></li>
+                <li class="breadcrumb-item active" aria-current="page">@Model.EnrollmentNumber</li>
+            </ol>
+        </nav>
+        <h2 class="h4 fw-bold mb-0 text-primary">@Model.FullName</h2>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.StudentId" class="btn btn-outline-primary">
+            <i class="bi bi-pencil me-1"></i> Edit Details
+        </a>
+        <form asp-action="ToggleStatus" asp-route-id="@Model.StudentId" method="post" class="d-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn @(Model.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                <i class="bi @(Model.IsActive ? "bi-person-x" : "bi-person-check") me-1"></i>
+                @(Model.IsActive ? "Deactivate Account" : "Activate Account")
+            </button>
+        </form>
+    </div>
+</div>
+
+@if (Model.HasOverdueLoans)
+{
+    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+        <div>
+            <div class="fw-bold">Borrowing Blocked: Overdue Book Unreturned</div>
+            <div>This student has at least one book past its due date. New book issues are strictly blocked until overdue books are returned.</div>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Academic Details Card -->
+    <div class="col-lg-4">
+        <div class="card-custom h-100">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-person-lines-fill"></i> Academic Profile</span>
+                <span class="badge-status @(Model.IsActive ? "badge-active" : "badge-withdrawn")">
+                    <i class="bi @(Model.IsActive ? "bi-check-circle" : "bi-dash-circle")"></i>
+                    @(Model.IsActive ? "Active" : "Inactive")
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="text-center py-3 border-bottom mb-3">
+                    <div class="user-avatar mx-auto mb-2" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        @Model.FullName[0].ToString().ToUpper()
+                    </div>
+                    <h5 class="fw-bold mb-0">@Model.FullName</h5>
+                    <div class="font-monospace text-primary fw-semibold">@Model.EnrollmentNumber</div>
+                </div>
+
+                <dl class="row small mb-0">
+                    <dt class="col-5 text-muted">Department:</dt>
+                    <dd class="col-7 fw-semibold">@Model.DepartmentName</dd>
+
+                    <dt class="col-5 text-muted">Semester:</dt>
+                    <dd class="col-7">Semester @Model.Semester</dd>
+
+                    <dt class="col-5 text-muted">Email:</dt>
+                    <dd class="col-7">@(Model.Email ?? "Not provided")</dd>
+
+                    <dt class="col-5 text-muted">Phone:</dt>
+                    <dd class="col-7">@(Model.Phone ?? "Not provided")</dd>
+
+                    <dt class="col-5 text-muted">Enrolled Date:</dt>
+                    <dd class="col-7">@Model.CreatedAt.ToString("dd MMM yyyy")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- Circulation Status Card -->
+    <div class="col-lg-8">
+        <div class="card-custom h-100">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-card-checklist"></i> Circulation Standing</span>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Active Loans</div>
+                            <div class="fs-3 fw-bold @(Model.ActiveLoansCount >= 3 ? "text-danger" : "text-primary")">
+                                @Model.ActiveLoansCount / 3
+                            </div>
+                            <div class="small text-muted">Max 3 allowed</div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Overdue Status</div>
+                            <div class="fs-3 fw-bold @(Model.HasOverdueLoans ? "text-danger" : "text-success")">
+                                @(Model.HasOverdueLoans ? "Overdue" : "Clear")
+                            </div>
+                            <div class="small text-muted">@(Model.HasOverdueLoans ? "Borrowing blocked" : "Eligible")</div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <div class="p-3 bg-light rounded border">
+                            <div class="text-muted small fw-semibold text-uppercase">Outstanding Fines</div>
+                            <div class="fs-3 fw-bold @(Model.OutstandingFinesTotal > 0 ? "text-danger" : "text-success")">
+                                ₹@Model.OutstandingFinesTotal.ToString("N2")
+                            </div>
+                            <div class="small text-muted">Payable offline</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-light border small text-muted mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <strong>Confirmed Library Policy:</strong> A student cannot borrow a new book while having an overdue, unreturned book. Outstanding fines from returned books do not automatically block borrowing.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loan History Table -->
+<div class="card-custom mt-4">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-clock-history"></i> Complete Borrowing History</span>
+        <span class="badge bg-secondary">@Model.LoanHistory.Count records</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Accession No.</th>
+                    <th>Book Title</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Return Date</th>
+                    <th>Renewals</th>
+                    <th>Status</th>
+                    <th>Fine Penalty</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.LoanHistory.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-journal-x fs-3 d-block mb-1"></i>
+                            No borrowing records found for this student.
+                        </td>
+                    </tr>
+                }
+                @foreach (var l in Model.LoanHistory)
+                {
+                    <tr>
+                        <td class="font-monospace fw-semibold">@l.AccessionNumber</td>
+                        <td class="fw-bold">@l.BookTitle</td>
+                        <td>@l.IssuedAt.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <span class="@(l.Status == "Active" && l.DueAt < DateTime.Now ? "text-danger fw-bold" : "")">
+                                @l.DueAt.ToString("dd MMM yyyy")
+                            </span>
+                        </td>
+                        <td>@(l.ReturnedAt?.ToString("dd MMM yyyy") ?? "-")</td>
+                        <td>@l.RenewalCount / 1</td>
+                        <td>
+                            @if (l.Status == "Active")
+                            {
+                                <span class="badge-status @(l.DueAt < DateTime.Now ? "badge-overdue" : "badge-active")">
+                                    <i class="bi @(l.DueAt < DateTime.Now ? "bi-alarm" : "bi-book")"></i>
+                                    @(l.DueAt < DateTime.Now ? "Overdue" : "Active")
+                                </span>
+                            }
+                            else if (l.Status == "Returned")
+                            {
+                                <span class="badge-status badge-returned">
+                                    <i class="bi bi-check2"></i> Returned
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-lost">Lost</span>
+                            }
+                        </td>
+                        <td>
+                            @if (l.FineAmount.HasValue && l.FineAmount.Value > 0)
+                            {
+                                <span class="fw-bold @(l.FineStatus == "Paid" ? "text-success" : "text-danger")">
+                                    ₹@l.FineAmount.Value.ToString("N2")
+                                </span>
+                                <span class="badge-status ms-1 @(l.FineStatus == "Paid" ? "badge-paid" : "badge-pending")">
+                                    @l.FineStatus
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-muted small">None</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

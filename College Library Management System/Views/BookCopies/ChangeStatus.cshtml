@@ -1,0 +1,78 @@
+@using College_Library_Management_System.Models.Enums
+@model College_Library_Management_System.ViewModels.Inventory.ChangeCopyStatusViewModel
+@{
+    ViewData["Title"] = "Update Copy Status - " + Model.AccessionNumber;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card-custom">
+            <div class="card-header">
+                <span class="card-title"><i class="bi bi-tag"></i> Update Copy Status</span>
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Inventory
+                </a>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="p-3 bg-light rounded border mb-4">
+                    <div class="row g-2">
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Accession Number</span>
+                            <span class="font-monospace fw-bold fs-6 text-primary">@Model.AccessionNumber</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-muted small d-block">Current Status</span>
+                            <span class="badge @(Model.CurrentStatus == BookCopyStatus.Available ? "bg-success" : Model.CurrentStatus == BookCopyStatus.Issued ? "bg-info" : Model.CurrentStatus == BookCopyStatus.Damaged ? "bg-warning text-dark" : "bg-danger")">
+                                @Model.CurrentStatus
+                            </span>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="text-muted small d-block">Book Title</span>
+                            <span class="fw-semibold">@Model.BookTitle</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form asp-action="ChangeStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="BookCopyId" />
+                    <input type="hidden" asp-for="AccessionNumber" />
+                    <input type="hidden" asp-for="BookTitle" />
+                    <input type="hidden" asp-for="CurrentStatus" />
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="NewStatus" class="form-label fw-semibold"></label>
+                        <select asp-for="NewStatus" class="form-select" required>
+                            <option value="@BookCopyStatus.Available">Available (Ready to borrow)</option>
+                            <option value="@BookCopyStatus.Damaged">Damaged (Requires repair/binding)</option>
+                            <option value="@BookCopyStatus.Lost">Lost (Missing from stack)</option>
+                            <option value="@BookCopyStatus.Withdrawn">Withdrawn (Decommissioned/Archived)</option>
+                        </select>
+                        <span asp-validation-for="NewStatus" class="text-danger small"></span>
+                        <div class="form-text">Copies with an active loan cannot be set to Available directly; use the Return workflow instead.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ConditionNotes" class="form-label fw-semibold"></label>
+                        <textarea asp-for="ConditionNotes" class="form-control" rows="3" placeholder="Reason for status change or condition update..." maxlength="500"></textarea>
+                        <span asp-validation-for="ConditionNotes" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                        <a asp-action="Index" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary-library">
+                            <i class="bi bi-check2 me-1"></i> Save Status Change
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

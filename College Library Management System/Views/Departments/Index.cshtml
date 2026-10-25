@@ -1,0 +1,89 @@
+@model IEnumerable<College_Library_Management_System.ViewModels.Departments.DepartmentItemViewModel>
+@{
+    ViewData["Title"] = "Academic Departments";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">Academic Departments</h2>
+        <p class="text-muted small mb-0">Manage college departments and student faculties.</p>
+    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-action="Create" class="btn btn-primary-library">
+            <i class="bi bi-plus-circle me-1"></i> Add Department
+        </a>
+    }
+</div>
+
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-building"></i> Registered Departments</span>
+        <span class="badge bg-secondary">Total: @Model.Count()</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-custom table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Department Code</th>
+                    <th>Department Name</th>
+                    <th>Enrolled Students</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox fs-3 d-block mb-1"></i>
+                            No departments registered yet.
+                        </td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <span class="badge bg-light text-dark border font-monospace px-2 py-1">@item.DepartmentCode</span>
+                        </td>
+                        <td class="fw-semibold">@item.DepartmentName</td>
+                        <td>
+                            <span class="badge rounded-pill @(item.StudentCount > 0 ? "bg-info text-dark" : "bg-light text-muted border")">
+                                <i class="bi bi-people me-1"></i>@item.StudentCount Students
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a asp-action="Edit" asp-route-id="@item.DepartmentId" class="btn btn-outline-primary btn-sm-action me-1" title="Edit Department">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </a>
+                                @if (item.StudentCount == 0)
+                                {
+                                    <form asp-action="Delete" asp-route-id="@item.DepartmentId" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete department \'@item.DepartmentName\'?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger btn-sm-action" title="Delete Department">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-secondary btn-sm-action disabled" title="Cannot delete department with enrolled students" disabled>
+                                        <i class="bi bi-lock"></i> Protected
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">View Only</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
