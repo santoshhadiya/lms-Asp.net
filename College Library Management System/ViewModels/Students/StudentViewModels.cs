@@ -64,6 +64,11 @@ namespace College_Library_Management_System.ViewModels.Students
         [Display(Name = "Active Status")]
         public bool IsActive { get; set; } = true;
 
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Temporary password must be at least 6 characters.")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Temporary Password")]
+        public string? TemporaryPassword { get; set; }
+
         public List<SelectListItem> DepartmentOptions { get; set; } = new();
     }
 

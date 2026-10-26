@@ -61,6 +61,14 @@ namespace College_Library_Management_System.Data.Configurations
                 .IsRequired()
                 .HasDefaultValue(true);
 
+            builder.Property(s => s.UserId)
+                .HasMaxLength(450);
+
+            builder.HasOne(s => s.User)
+                .WithOne(u => u.Student)
+                .HasForeignKey<Student>(s => s.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.HasMany(s => s.Loans)
                 .WithOne(l => l.Student)
                 .HasForeignKey(l => l.StudentId)

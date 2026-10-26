@@ -1,0 +1,327 @@
+@model College_Library_Management_System.ViewModels.StudentDashboard.StudentDashboardViewModel
+@{
+    ViewData["Title"] = "Student Portal";
+}
+
+<!-- Welcome Banner -->
+<div class="card-custom mb-4" style="background: linear-gradient(135deg, #1e3a8a, #0369a1); color: #fff;">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="badge bg-light text-primary mb-2 fw-semibold px-2 py-1">Student Portal</div>
+            <h2 class="h3 fw-bold mb-1">Welcome, @Model.Profile.FullName!</h2>
+            <div class="opacity-75 small">
+                <span><i class="bi bi-person-badge me-1"></i> Enrollment: <strong>@Model.Profile.EnrollmentNumber</strong></span>
+                <span class="mx-2">•</span>
+                <span><i class="bi bi-building me-1"></i> @Model.Profile.DepartmentName (@Model.Profile.DepartmentCode) - Sem @Model.Profile.Semester</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="ChangePassword" class="btn btn-light btn-sm text-primary fw-semibold">
+                <i class="bi bi-key me-1"></i> Change Password
+            </a>
+        </div>
+    </div>
+</div>
+
+@if (Model.OverdueLoansCount > 0)
+{
+    <div class="alert alert-danger d-flex align-items-center mb-4 alert-custom border-danger shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-3 text-danger me-3"></i>
+        <div>
+            <div class="fw-bold">Attention: You have @Model.OverdueLoansCount Overdue Book(s)!</div>
+            <div class="small">Please return your overdue books at the library circulation desk as soon as possible. Overdue books accumulate a daily fine of ₹5.00 per day.</div>
+        </div>
+    </div>
+}
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card-custom p-3 h-100">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-primary-subtle text-primary me-3">
+                    <i class="bi bi-book fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">Currently Borrowed</div>
+                    <div class="fs-4 fw-bold text-dark">
+                        @Model.ActiveLoansCount <span class="fs-6 text-muted font-monospace">/ @Model.MaxBorrowingLimit max</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card-custom p-3 h-100">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 @(Model.OverdueLoansCount > 0 ? "bg-danger-subtle text-danger" : "bg-success-subtle text-success") me-3">
+                    <i class="bi bi-calendar-x fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">Overdue Books</div>
+                    <div class="fs-4 fw-bold @(Model.OverdueLoansCount > 0 ? "text-danger" : "text-success")">
+                        @Model.OverdueLoansCount
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card-custom p-3 h-100">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 @(Model.OutstandingFinesTotal > 0 ? "bg-warning-subtle text-warning" : "bg-success-subtle text-success") me-3">
+                    <i class="bi bi-currency-rupee fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">Outstanding Fine</div>
+                    <div class="fs-4 fw-bold @(Model.OutstandingFinesTotal > 0 ? "text-danger" : "text-success")">
+                        ₹@Model.OutstandingFinesTotal.ToString("N2")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card-custom p-3 h-100">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 bg-info-subtle text-info me-3">
+                    <i class="bi bi-check-circle-fill fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-muted small fw-semibold">Completed Loans</div>
+                    <div class="fs-4 fw-bold text-dark">
+                        @Model.TotalCompletedLoans
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Active Loans Table -->
+    <div class="col-lg-8">
+        <div class="card-custom mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-title">
+                    <i class="bi bi-arrow-left-right text-primary me-1"></i> Currently Issued Books
+                </span>
+                <a asp-action="Loans" class="btn btn-sm btn-outline-primary">View All History</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Accession No.</th>
+                            <th>Issued Date</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ActiveLoans.Any())
+                        {
+                            foreach (var loan in Model.ActiveLoans)
+                            {
+                                <tr class="@(loan.IsOverdue ? "table-danger" : "")">
+                                    <td>
+                                        <div class="fw-bold">@loan.BookTitle</div>
+                                        @if (loan.RenewalCount > 0)
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.7rem;">Renewed 1x</span>
+                                        }
+                                    </td>
+                                    <td><code class="text-primary">@loan.AccessionNumber</code></td>
+                                    <td class="small text-muted">@loan.IssuedAt.ToString("dd MMM yyyy")</td>
+                                    <td>
+                                        <div class="fw-semibold @(loan.IsOverdue ? "text-danger" : "text-dark")">
+                                            @loan.DueAt.ToString("dd MMM yyyy")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (loan.IsOverdue)
+                                        {
+                                            <span class="badge bg-danger">
+                                                Overdue (@loan.DaysOverdue d) - Est. Fine: ₹@loan.EstimatedFine.ToString("N2")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                Active (Due in @((loan.DueAt.Date - DateTime.Now.Date).Days) d)
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-muted">
+                                    <i class="bi bi-journal-check fs-2 d-block mb-1 text-success"></i>
+                                    You currently have no issued books.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Borrowing History -->
+        <div class="card-custom">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-title">
+                    <i class="bi bi-clock-history text-secondary me-1"></i> Recent Return History
+                </span>
+                <a asp-action="Loans" class="btn btn-sm btn-outline-secondary">Full Log</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Book Title</th>
+                            <th>Accession No.</th>
+                            <th>Issued</th>
+                            <th>Returned</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.BorrowingHistory.Any())
+                        {
+                            foreach (var loan in Model.BorrowingHistory.Take(5))
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@loan.BookTitle</td>
+                                    <td><code>@loan.AccessionNumber</code></td>
+                                    <td class="small text-muted">@loan.IssuedAt.ToString("dd MMM yyyy")</td>
+                                    <td class="small text-success">@(loan.ReturnedAt?.ToString("dd MMM yyyy") ?? "-")</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">Returned</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center py-3 text-muted small">
+                                    No past borrowing history yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Profile & Fines Summary -->
+    <div class="col-lg-4">
+        <!-- Profile Card -->
+        <div class="card-custom mb-4">
+            <div class="card-header">
+                <span class="card-title">
+                    <i class="bi bi-person-lines-fill text-primary me-1"></i> My Profile
+                </span>
+            </div>
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar-circle me-3" style="width: 48px; height: 48px; background-color: #1e3a8a; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold;">
+                        @Model.Profile.FullName[0].ToString().ToUpper()
+                    </div>
+                    <div>
+                        <div class="fw-bold">@Model.Profile.FullName</div>
+                        <div class="text-muted small">@Model.Profile.EnrollmentNumber</div>
+                    </div>
+                </div>
+
+                <ul class="list-group list-group-flush small">
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Department:</span>
+                        <span class="fw-semibold">@Model.Profile.DepartmentName</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Current Semester:</span>
+                        <span class="fw-semibold">Semester @Model.Profile.Semester</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Registered Email:</span>
+                        <span class="fw-semibold">@(Model.Profile.Email ?? "Not set")</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Phone:</span>
+                        <span class="fw-semibold">@(Model.Profile.Phone ?? "Not set")</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Member Since:</span>
+                        <span>@Model.Profile.MemberSince.ToString("dd MMM yyyy")</span>
+                    </li>
+                    <li class="list-group-item px-0 d-flex justify-content-between">
+                        <span class="text-muted">Library Privileges:</span>
+                        @if (Model.Profile.IsActive)
+                        {
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger-subtle text-danger">Suspended</span>
+                        }
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Fines Summary Card -->
+        <div class="card-custom">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="card-title">
+                    <i class="bi bi-receipt-cutoff text-warning me-1"></i> Fines & Receipts
+                </span>
+                <a asp-action="Fines" class="btn btn-sm btn-outline-warning">View Receipts</a>
+            </div>
+            <div class="card-body p-3">
+                @if (Model.FinesAndPayments.Any())
+                {
+                    <div class="list-group list-group-flush small">
+                        @foreach (var fine in Model.FinesAndPayments.Take(4))
+                        {
+                            <div class="list-group-item px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-bold">@fine.BookTitle</div>
+                                    <span class="badge @(fine.Status == "Paid" ? "bg-success" : fine.Status == "Waived" ? "bg-secondary" : "bg-danger")">
+                                        @fine.Status
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted small mt-1">
+                                    <span>Assessed: ₹@fine.FineAmount.ToString("N2")</span>
+                                    @if (fine.Status == "Paid" && !string.IsNullOrEmpty(fine.ReceiptNumber))
+                                    {
+                                        <span class="text-success"><i class="bi bi-receipt"></i> @fine.ReceiptNumber</span>
+                                    }
+                                    else if (fine.RemainingBalance > 0)
+                                    {
+                                        <span class="text-danger fw-bold">Due: ₹@fine.RemainingBalance.ToString("N2")</span>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted small">
+                        <i class="bi bi-shield-check fs-2 d-block mb-1 text-success"></i>
+                        No fines or penalties recorded. Keep it up!
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

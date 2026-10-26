@@ -609,12 +609,20 @@ namespace College_Library_Management_System.Migrations
                     b.Property<int>("Semester")
                         .HasColumnType("int");
 
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("StudentId");
 
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("EnrollmentNumber")
                         .IsUnique();
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("Students", (string)null);
                 });
@@ -880,7 +888,14 @@ namespace College_Library_Management_System.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("College_Library_Management_System.Models.ApplicationUser", "User")
+                        .WithOne("Student")
+                        .HasForeignKey("College_Library_Management_System.Models.Student", "UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Department");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -941,6 +956,8 @@ namespace College_Library_Management_System.Migrations
                     b.Navigation("ReceivedLoans");
 
                     b.Navigation("ReceivedPayments");
+
+                    b.Navigation("Student");
 
                     b.Navigation("WaivedFines");
                 });

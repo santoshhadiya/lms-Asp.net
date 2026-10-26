@@ -18,6 +18,11 @@ namespace College_Library_Management_System.Controllers
 
         public async Task<IActionResult> Index()
         {
+            if (User.IsInRole("Student"))
+            {
+                return RedirectToAction("Index", "StudentDashboard");
+            }
+
             var dashboard = await _reportService.GetDashboardMetricsAsync();
             return View(dashboard);
         }

@@ -5,6 +5,7 @@ using College_Library_Management_System.Services.Common;
 using College_Library_Management_System.Services.Interfaces;
 using College_Library_Management_System.ViewModels.Common;
 using College_Library_Management_System.ViewModels.Students;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,20 +31,23 @@ namespace College_Library_Management_System.Services
         private readonly ApplicationDbContext _context;
         private readonly IDateTimeProvider _dateTimeProvider;
         private readonly IAuditLogService _auditLogService;
+        private readonly UserManager<ApplicationUser>? _userManager;
 
-        public StudentService(ApplicationDbContext context, IDateTimeProvider dateTimeProvider, IAuditLogService auditLogService)
+        public StudentService(
+            ApplicationDbContext context, 
+            IDateTimeProvider dateTimeProvider, 
+            IAuditLogService auditLogService,
+            UserManager<ApplicationUser>? userManager = null)
         {
             _context = context;
             _dateTimeProvider = dateTimeProvider;
             _auditLogService = auditLogService;
+            _userManager = userManager;
         }
 
         public async Task<PaginatedList<StudentListItemViewModel>> GetStudentsAsync(StudentListFilterViewModel filter)
         {
             var query = _context.Students
-                .Include(s => s.Department)
-                .Include(s => s.Loans)
-                    .ThenInclude(l => l.Fine)
                 .AsNoTracking()
                 .AsQueryable();
 
@@ -89,12 +93,8 @@ namespace College_Library_Management_System.Services
                     IsActive = s.IsActive,
                     ActiveLoansCount = s.Loans.Count(l => l.Status == LoanStatus.Active),
                     OutstandingFinesTotal = s.Loans
-                        .Where(l => l.Fine != null)
-                        .Select(l => l.Fine!)
-                        .Where(f => f.Status != FineStatus.Paid && f.Status != FineStatus.Waived)
-                        .Select(f => f.FineAmount - f.AmountPaid - f.WaivedAmount)
-                        .DefaultIfEmpty(0m)
-                        .Sum()
+                        .Where(l => l.Fine != null && l.Fine.Status != FineStatus.Paid && l.Fine.Status != FineStatus.Waived)
+                        .Sum(l => (decimal?)(l.Fine!.FineAmount - l.Fine.AmountPaid - l.Fine.WaivedAmount)) ?? 0m
                 })
                 .ToListAsync();
 
@@ -216,15 +216,55 @@ namespace College_Library_Management_System.Services
                 return (false, "The selected department does not exist.", null);
             }
 
+            var studentEmail = string.IsNullOrWhiteSpace(model.Email)
+                ? $"{trimmedEnrollment.ToLowerInvariant()}@student.collegelibrary.edu"
+                : model.Email.Trim().ToLowerInvariant();
+
+            string tempPassword = !string.IsNullOrWhiteSpace(model.TemporaryPassword)
+                ? model.TemporaryPassword.Trim()
+                : $"Student@{trimmedEnrollment}1";
+
+            string? createdUserId = null;
+
+            if (_userManager != null)
+            {
+                var existingUser = await _userManager.FindByEmailAsync(studentEmail);
+                if (existingUser != null)
+                {
+                    return (false, $"A user account with email '{studentEmail}' already exists.", null);
+                }
+
+                var user = new ApplicationUser
+                {
+                    UserName = studentEmail,
+                    Email = studentEmail,
+                    FullName = model.FullName.Trim(),
+                    EmailConfirmed = true,
+                    IsActive = model.IsActive,
+                    CreatedAt = _dateTimeProvider.UtcNow
+                };
+
+                var userResult = await _userManager.CreateAsync(user, tempPassword);
+                if (!userResult.Succeeded)
+                {
+                    var errors = string.Join(", ", userResult.Errors.Select(e => e.Description));
+                    return (false, $"Could not create student login account: {errors}", null);
+                }
+
+                await _userManager.AddToRoleAsync(user, "Student");
+                createdUserId = user.Id;
+            }
+
             var student = new Student
             {
                 EnrollmentNumber = trimmedEnrollment,
                 FullName = model.FullName.Trim(),
-                Email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim().ToLowerInvariant(),
+                Email = studentEmail,
                 Phone = string.IsNullOrWhiteSpace(model.Phone) ? null : model.Phone.Trim(),
                 DepartmentId = model.DepartmentId,
                 Semester = model.Semester,
                 IsActive = model.IsActive,
+                UserId = createdUserId,
                 CreatedAt = _dateTimeProvider.UtcNow
             };
 
@@ -235,12 +275,12 @@ namespace College_Library_Management_System.Services
                 action: "CreateStudent",
                 entityType: nameof(Student),
                 entityId: student.StudentId.ToString(),
-                details: $"Registered student '{student.FullName}' (Enrollment: {student.EnrollmentNumber}).",
+                details: $"Registered student '{student.FullName}' (Enrollment: {student.EnrollmentNumber}) with login '{studentEmail}'.",
                 userId: userId,
                 userEmail: userEmail
             );
 
-            return (true, "Student registered successfully.", student.StudentId);
+            return (true, $"Student registered successfully. Login Email: {studentEmail} | Temporary Password: {tempPassword}", student.StudentId);
         }
 
         public async Task<(bool Success, string Message)> UpdateStudentAsync(StudentFormViewModel model, string? userId, string? userEmail)
@@ -295,6 +335,18 @@ namespace College_Library_Management_System.Services
             }
 
             student.IsActive = !student.IsActive;
+
+            if (_userManager != null && !string.IsNullOrEmpty(student.UserId))
+            {
+                var user = await _userManager.FindByIdAsync(student.UserId);
+                if (user != null)
+                {
+                    user.IsActive = student.IsActive;
+                    await _userManager.UpdateAsync(user);
+                    await _userManager.UpdateSecurityStampAsync(user);
+                }
+            }
+
             await _context.SaveChangesAsync();
 
             var statusStr = student.IsActive ? "Activated" : "Deactivated";

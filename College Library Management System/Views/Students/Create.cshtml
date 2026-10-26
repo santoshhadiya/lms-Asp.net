@@ -63,10 +63,22 @@
                             <span asp-validation-for="Phone" class="text-danger small"></span>
                         </div>
 
+                        <div class="col-md-6">
+                            <label asp-for="TemporaryPassword" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <input asp-for="TemporaryPassword" id="tempPasswordInput" class="form-control" placeholder="Leave empty to auto-generate" autocomplete="new-password" />
+                                <button type="button" class="btn btn-outline-secondary" onclick="generateStudentPassword()">
+                                    <i class="bi bi-magic me-1"></i> Auto
+                                </button>
+                            </div>
+                            <span asp-validation-for="TemporaryPassword" class="text-danger small"></span>
+                            <div class="form-text">Optional. If blank, a secure temporary password is automatically assigned.</div>
+                        </div>
+
                         <div class="col-12">
                             <div class="form-check form-switch mt-2">
                                 <input asp-for="IsActive" class="form-check-input" type="checkbox" id="isActiveSwitch" checked />
-                                <label class="form-check-label fw-semibold" for="isActiveSwitch">Student Account Active for Library Services</label>
+                                <label class="form-check-label fw-semibold" for="isActiveSwitch">Student Account Active for Library Services & Dashboard Login</label>
                             </div>
                         </div>
                     </div>
@@ -85,4 +97,15 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function generateStudentPassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@@#$%';
+            let pwd = 'Std@@';
+            for (let i = 0; i < 6; i++) {
+                pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            pwd += '1';
+            document.getElementById('tempPasswordInput').value = pwd;
+        }
+    </script>
 }

@@ -12,6 +12,9 @@ namespace College_Library_Management_System.Models
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public string? UserId { get; set; }
+        public virtual ApplicationUser? User { get; set; }
+
         public virtual Department Department { get; set; } = null!;
         public virtual ICollection<Loan> Loans { get; set; } = new List<Loan>();
     }

@@ -13,5 +13,6 @@ namespace College_Library_Management_System.Models
         public virtual ICollection<Loan> ReceivedLoans { get; set; } = new List<Loan>();
         public virtual ICollection<FinePayment> ReceivedPayments { get; set; } = new List<FinePayment>();
         public virtual ICollection<Fine> WaivedFines { get; set; } = new List<Fine>();
+        public virtual Student? Student { get; set; }
     }
 }

@@ -1,0 +1,130 @@
+@model College_Library_Management_System.ViewModels.StudentDashboard.StudentDashboardViewModel
+@{
+    ViewData["Title"] = "My Fines & Payment History";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="h4 fw-bold mb-1 text-primary">
+            <i class="bi bi-currency-rupee me-1"></i> Fines & Payment Receipts
+        </h2>
+        <div class="text-muted small">View overdue penalties, balances, and payment receipts.</div>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<!-- Fines Overview -->
+<div class="card-custom mb-4 @(Model.OutstandingFinesTotal > 0 ? "border-warning" : "border-success")">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <div class="text-muted small fw-semibold">Total Outstanding Balance</div>
+            <div class="fs-2 fw-bold @(Model.OutstandingFinesTotal > 0 ? "text-danger" : "text-success")">
+                ₹@Model.OutstandingFinesTotal.ToString("N2")
+            </div>
+            @if (Model.OutstandingFinesTotal > 0)
+            {
+                <div class="text-muted small mt-1">
+                    <i class="bi bi-info-circle me-1"></i> Fine payments must be settled at the library circulation desk. Partial payments are not permitted.
+                </div>
+            }
+            else
+            {
+                <div class="text-success small mt-1">
+                    <i class="bi bi-check-circle me-1"></i> Your account is in good standing with zero unpaid fines!
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Fines Table -->
+<div class="card-custom">
+    <div class="card-header">
+        <span class="card-title">
+            <i class="bi bi-receipt text-primary me-1"></i> Fines & Transactions History
+        </span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Book Details</th>
+                    <th>Assessed Date</th>
+                    <th>Total Fine</th>
+                    <th>Amount Paid</th>
+                    <th>Waived</th>
+                    <th>Balance Due</th>
+                    <th>Status</th>
+                    <th>Receipt No.</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.FinesAndPayments.Any())
+                {
+                    foreach (var fine in Model.FinesAndPayments)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold">@fine.BookTitle</div>
+                                <code class="text-muted small">@fine.AccessionNumber</code>
+                            </td>
+                            <td class="small text-muted">@fine.CalculatedAt.ToString("dd MMM yyyy")</td>
+                            <td>₹@fine.FineAmount.ToString("N2")</td>
+                            <td class="text-success">₹@fine.AmountPaid.ToString("N2")</td>
+                            <td class="text-muted">₹@fine.WaivedAmount.ToString("N2")</td>
+                            <td class="fw-bold @(fine.RemainingBalance > 0 ? "text-danger" : "text-muted")">
+                                ₹@fine.RemainingBalance.ToString("N2")
+                            </td>
+                            <td>
+                                @if (fine.Status == "Paid")
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-check-circle me-1"></i> Paid Full
+                                    </span>
+                                }
+                                else if (fine.Status == "Waived")
+                                {
+                                    <span class="badge bg-secondary-subtle text-secondary border">
+                                        Waived
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        Pending
+                                    </span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(fine.ReceiptNumber))
+                                {
+                                    <div>
+                                        <strong class="text-primary font-monospace">@fine.ReceiptNumber</strong>
+                                        <div class="small text-muted">
+                                            @(fine.PaidAt?.ToString("dd MMM yyyy") ?? "") (@(fine.PaymentMethod ?? "Cash"))
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">-</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="bi bi-check2-circle fs-2 d-block mb-1 text-success"></i>
+                            No fine records found for your account.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

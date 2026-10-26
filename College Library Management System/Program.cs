@@ -44,11 +44,19 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
+builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+{
+    options.TokenLifespan = TimeSpan.FromHours(2);
+});
+
 // Common & Core Services
 builder.Services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
+builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IEmailService, College_Library_Management_System.Services.EmailService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IAuditLogService, College_Library_Management_System.Services.AuditLogService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IDepartmentService, College_Library_Management_System.Services.DepartmentService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IStudentService, College_Library_Management_System.Services.StudentService>();
+builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IStudentDashboardService, College_Library_Management_System.Services.StudentDashboardService>();
+builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.ILibrarianService, College_Library_Management_System.Services.LibrarianService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IMasterDataService, College_Library_Management_System.Services.MasterDataService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IBookService, College_Library_Management_System.Services.BookService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IBookCopyService, College_Library_Management_System.Services.BookCopyService>();

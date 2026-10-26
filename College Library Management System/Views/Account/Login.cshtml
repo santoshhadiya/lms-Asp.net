@@ -1,6 +1,6 @@
 @model College_Library_Management_System.ViewModels.Account.LoginViewModel
 @{
-    ViewData["Title"] = "Librarian Portal Login";
+    ViewData["Title"] = "Library Portal Login";
     Layout = "_Layout";
 }
 
@@ -14,7 +14,7 @@
                             <i class="bi bi-book-half fs-1"></i>
                         </div>
                         <h3 class="fw-bold mb-1">College Library</h3>
-                        <p class="text-white-50 small mb-0">Management System Portal</p>
+                        <p class="text-white-50 small mb-0">Staff & Student Portal Login</p>
                     </div>
 
                     <div class="card-body p-4 p-md-4">
@@ -30,14 +30,17 @@
                                     <span class="input-group-text bg-light border-end-0 text-muted">
                                         <i class="bi bi-envelope"></i>
                                     </span>
-                                    <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="e.g. librarian@collegelibrary.edu" autocomplete="email" required />
+                                    <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="e.g. your.email@collegelibrary.edu" autocomplete="email" required />
                                 </div>
                                 <span asp-validation-for="Email" class="text-danger small"></span>
                             </div>
 
                             <div class="mb-3">
-                                <label asp-for="Password" class="form-label small fw-semibold text-secondary"></label>
-                                <div class="input-group">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <label asp-for="Password" class="form-label small fw-semibold text-secondary mb-0"></label>
+                                    <a asp-action="ForgotPassword" class="small text-primary text-decoration-none">Forgot password?</a>
+                                </div>
+                                <div class="input-group mt-1">
                                     <span class="input-group-text bg-light border-end-0 text-muted">
                                         <i class="bi bi-lock"></i>
                                     </span>
@@ -63,6 +66,9 @@
                             <div class="p-2 bg-light rounded border text-muted small">
                                 <div><strong>Admin:</strong> <code>admin@collegelibrary.edu</code> / <code>Admin@123456</code></div>
                                 <div class="mt-1"><strong>Librarian:</strong> <code>librarian@collegelibrary.edu</code> / <code>Librarian@123456</code></div>
+                                <div class="mt-1"><strong>Students:</strong> Registered Email / Temporary Password</div>
+                            </div>
+                        </div>
                             </div>
                         </div>
                     </div>

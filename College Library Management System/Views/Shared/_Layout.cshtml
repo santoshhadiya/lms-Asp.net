@@ -27,79 +27,111 @@
             </a>
 
             <div class="sidebar-menu overflow-auto flex-grow-1 py-2">
-                <div class="nav-section-title">Core Operations</div>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-speedometer2"></i>
-                    <span>Dashboard</span>
-                </a>
+                @if (User.IsInRole("Student"))
+                {
+                    <div class="nav-section-title">Student Portal</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentDashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" asp-controller="StudentDashboard" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>My Dashboard</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentDashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Loans" ? "active" : "")" asp-controller="StudentDashboard" asp-action="Loans">
+                        <i class="bi bi-book-half"></i>
+                        <span>My Issued Books</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentDashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Fines" ? "active" : "")" asp-controller="StudentDashboard" asp-action="Fines">
+                        <i class="bi bi-currency-rupee"></i>
+                        <span>Fines & Receipts</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "StudentDashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "ChangePassword" ? "active" : "")" asp-controller="StudentDashboard" asp-action="ChangePassword">
+                        <i class="bi bi-key-fill"></i>
+                        <span>Change Password</span>
+                    </a>
+                }
+                else
+                {
+                    <div class="nav-section-title">Core Operations</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
 
-                <div class="nav-section-title">Library Catalog</div>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Books" ? "active" : "")" asp-controller="Books" asp-action="Index">
-                    <i class="bi bi-journal-bookmark-fill"></i>
-                    <span>Book Catalog</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BookCopies" ? "active" : "")" asp-controller="BookCopies" asp-action="Index">
-                    <i class="bi bi-boxes"></i>
-                    <span>Physical Copies</span>
-                </a>
+                    <div class="nav-section-title">Library Catalog</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Books" ? "active" : "")" asp-controller="Books" asp-action="Index">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                        <span>Book Catalog</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "BookCopies" ? "active" : "")" asp-controller="BookCopies" asp-action="Index">
+                        <i class="bi bi-boxes"></i>
+                        <span>Physical Copies</span>
+                    </a>
 
-                <div class="nav-section-title">Circulation</div>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "ActiveLoans" ? "active" : "")" asp-controller="Circulation" asp-action="ActiveLoans">
-                    <i class="bi bi-arrow-left-right"></i>
-                    <span>Active Loans</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Issue" ? "active" : "")" asp-controller="Circulation" asp-action="Issue">
-                    <i class="bi bi-box-arrow-up-right"></i>
-                    <span>Issue Book</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Return" ? "active" : "")" asp-controller="Circulation" asp-action="Return">
-                    <i class="bi bi-box-arrow-in-down"></i>
-                    <span>Return Book</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Fines" ? "active" : "")" asp-controller="Fines" asp-action="Index">
-                    <i class="bi bi-currency-rupee"></i>
-                    <span>Fines & Receipts</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")" asp-controller="Students" asp-action="Index">
-                    <i class="bi bi-person-badge-fill"></i>
-                    <span>Student Registry</span>
-                </a>
+                    <div class="nav-section-title">Circulation</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "ActiveLoans" ? "active" : "")" asp-controller="Circulation" asp-action="ActiveLoans">
+                        <i class="bi bi-arrow-left-right"></i>
+                        <span>Active Loans</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Issue" ? "active" : "")" asp-controller="Circulation" asp-action="Issue">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span>Issue Book</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "Return" ? "active" : "")" asp-controller="Circulation" asp-action="Return">
+                        <i class="bi bi-box-arrow-in-down"></i>
+                        <span>Return Book</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Fines" ? "active" : "")" asp-controller="Fines" asp-action="Index">
+                        <i class="bi bi-currency-rupee"></i>
+                        <span>Fines & Receipts</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")" asp-controller="Students" asp-action="Index">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <span>Student Registry</span>
+                    </a>
 
-                <div class="nav-section-title">Master Data</div>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Departments" ? "active" : "")" asp-controller="Departments" asp-action="Index">
-                    <i class="bi bi-building"></i>
-                    <span>Departments</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")" asp-controller="Categories" asp-action="Index">
-                    <i class="bi bi-tags-fill"></i>
-                    <span>Categories</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Authors" ? "active" : "")" asp-controller="Authors" asp-action="Index">
-                    <i class="bi bi-pen-fill"></i>
-                    <span>Authors</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Publishers" ? "active" : "")" asp-controller="Publishers" asp-action="Index">
-                    <i class="bi bi-printer-fill"></i>
-                    <span>Publishers</span>
-                </a>
+                    <div class="nav-section-title">Master Data</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Departments" ? "active" : "")" asp-controller="Departments" asp-action="Index">
+                        <i class="bi bi-building"></i>
+                        <span>Departments</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Categories" ? "active" : "")" asp-controller="Categories" asp-action="Index">
+                        <i class="bi bi-tags-fill"></i>
+                        <span>Categories</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Authors" ? "active" : "")" asp-controller="Authors" asp-action="Index">
+                        <i class="bi bi-pen-fill"></i>
+                        <span>Authors</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Publishers" ? "active" : "")" asp-controller="Publishers" asp-action="Index">
+                        <i class="bi bi-printer-fill"></i>
+                        <span>Publishers</span>
+                    </a>
 
-                <div class="nav-section-title">Reports & Analytics</div>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
-                    <i class="bi bi-file-earmark-bar-graph"></i>
-                    <span>Reports Hub</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Overdue" ? "active" : "")" asp-controller="Reports" asp-action="Overdue">
-                    <i class="bi bi-calendar-x"></i>
-                    <span>Overdue Books</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Collections" ? "active" : "")" asp-controller="Reports" asp-action="Collections">
-                    <i class="bi bi-receipt-cutoff"></i>
-                    <span>Financial Collections</span>
-                </a>
-                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")" asp-controller="Reports" asp-action="AuditLogs">
-                    <i class="bi bi-shield-check"></i>
-                    <span>System Audit Trail</span>
-                </a>
+                    <div class="nav-section-title">Reports & Analytics</div>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        <span>Reports Hub</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Overdue" ? "active" : "")" asp-controller="Reports" asp-action="Overdue">
+                        <i class="bi bi-calendar-x"></i>
+                        <span>Overdue Books</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "Collections" ? "active" : "")" asp-controller="Reports" asp-action="Collections">
+                        <i class="bi bi-receipt-cutoff"></i>
+                        <span>Financial Collections</span>
+                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")" asp-controller="Reports" asp-action="AuditLogs">
+                        <i class="bi bi-shield-check"></i>
+                        <span>System Audit Trail</span>
+                    </a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <div class="nav-section-title">Administration</div>
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Librarians" ? "active" : "")" asp-controller="Librarians" asp-action="Index">
+                            <i class="bi bi-people-fill"></i>
+                            <span>Librarian Management</span>
+                        </a>
+                    }
+                }
             </div>
 
             <div class="p-3 border-top border-secondary-subtle small text-muted">
@@ -137,7 +169,7 @@
                             <div class="user-avatar me-2">@initials</div>
                             <div class="d-none d-sm-block text-start me-1">
                                 <div class="fw-semibold small leading-none">@(currentUser?.FullName ?? User.Identity?.Name)</div>
-                                <span class="badge @(primaryRole == "Admin" ? "bg-danger" : "bg-primary")" style="font-size: 0.68rem;">@primaryRole</span>
+                                <span class="badge @(primaryRole == "Admin" ? "bg-danger" : primaryRole == "Student" ? "bg-success" : "bg-primary")" style="font-size: 0.68rem;">@primaryRole</span>
                             </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenuDropdown">
@@ -145,6 +177,13 @@
                                 <div class="fw-bold small">@(currentUser?.FullName)</div>
                                 <div class="text-muted small">@currentUser?.Email</div>
                             </li>
+                            <li>
+                                <a asp-controller="Account" asp-action="ChangePassword" class="dropdown-item d-flex align-items-center gap-2">
+                                    <i class="bi bi-key text-muted"></i>
+                                    <span>Change Password</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-1"></li>
                             <li>
                                 <form asp-controller="Account" asp-action="Logout" method="post" class="p-1">
                                     @Html.AntiForgeryToken()

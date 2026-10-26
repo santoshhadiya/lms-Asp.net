@@ -8,6 +8,7 @@ namespace College_Library_Management_System.Data
     {
         public const string AdminRole = "Admin";
         public const string LibrarianRole = "Librarian";
+        public const string StudentRole = "Student";
 
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
@@ -32,7 +33,7 @@ namespace College_Library_Management_System.Data
             }
 
             // 1. Seed Roles
-            string[] roles = [AdminRole, LibrarianRole];
+            string[] roles = [AdminRole, LibrarianRole, StudentRole];
             foreach (var role in roles)
             {
                 if (!await roleManager.RoleExistsAsync(role))
@@ -184,6 +185,52 @@ namespace College_Library_Management_System.Data
                 context.Authors.AddRange(authors);
                 await context.SaveChangesAsync();
                 logger.LogInformation("Initial authors seeded.");
+            }
+
+            // 9. Synchronize existing students without user accounts
+            var unlinkedStudents = await context.Students
+                .Where(s => s.UserId == null)
+                .ToListAsync();
+
+            foreach (var student in unlinkedStudents)
+            {
+                var email = !string.IsNullOrWhiteSpace(student.Email) 
+                    ? student.Email.Trim().ToLowerInvariant() 
+                    : $"{student.EnrollmentNumber.ToLowerInvariant()}@student.collegelibrary.edu";
+
+                var existingUser = await userManager.FindByEmailAsync(email);
+                if (existingUser == null)
+                {
+                    existingUser = new ApplicationUser
+                    {
+                        UserName = email,
+                        Email = email,
+                        FullName = student.FullName,
+                        EmailConfirmed = true,
+                        IsActive = student.IsActive,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    var createResult = await userManager.CreateAsync(existingUser, "Student@123");
+                    if (createResult.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(existingUser, StudentRole);
+                        student.UserId = existingUser.Id;
+                        logger.LogInformation("Created student user account for '{Email}'.", email);
+                    }
+                }
+                else
+                {
+                    student.UserId = existingUser.Id;
+                    if (!await userManager.IsInRoleAsync(existingUser, StudentRole))
+                    {
+                        await userManager.AddToRoleAsync(existingUser, StudentRole);
+                    }
+                }
+            }
+
+            if (unlinkedStudents.Any(s => s.UserId != null))
+            {
+                await context.SaveChangesAsync();
             }
         }
     }
