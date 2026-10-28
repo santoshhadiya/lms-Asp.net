@@ -78,6 +78,10 @@
                         <i class="bi bi-box-arrow-in-down"></i>
                         <span>Return Book</span>
                     </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Circulation" && ViewContext.RouteData.Values["action"]?.ToString() == "History" ? "active" : "")" asp-controller="Circulation" asp-action="History">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Issue & Return History</span>
+                    </a>
                     <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Fines" ? "active" : "")" asp-controller="Fines" asp-action="Index">
                         <i class="bi bi-currency-rupee"></i>
                         <span>Fines & Receipts</span>

@@ -130,4 +130,69 @@ namespace College_Library_Management_System.ViewModels.Circulation
         public string? ShelfLocation { get; set; }
         public BookCopyStatus? CopyStatus { get; set; }
     }
+
+    public class LoanHistoryFilterViewModel
+    {
+        public string? SearchTerm { get; set; }
+        public int? DepartmentId { get; set; }
+        public LoanStatus? Status { get; set; }
+        public string ActiveTab { get; set; } = "all"; // "all", "issued", "returned"
+
+        [DataType(DataType.Date)]
+        public DateTime? FromDate { get; set; }
+
+        [DataType(DataType.Date)]
+        public DateTime? ToDate { get; set; }
+
+        public string DateFilterType { get; set; } = "Issued"; // "Issued", "Returned"
+        public int PageNumber { get; set; } = 1;
+        public int PageSize { get; set; } = 15;
+        public List<SelectListItem> DepartmentOptions { get; set; } = new();
+        public LoanHistorySummaryViewModel Summary { get; set; } = new();
+    }
+
+    public class LoanHistoryItemViewModel
+    {
+        public int LoanId { get; set; }
+        public int BookCopyId { get; set; }
+        public string AccessionNumber { get; set; } = string.Empty;
+        public string BookTitle { get; set; } = string.Empty;
+        public int BookId { get; set; }
+        public string? ShelfLocation { get; set; }
+
+        public int StudentId { get; set; }
+        public string StudentEnrollment { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public string DepartmentCode { get; set; } = string.Empty;
+        public string DepartmentName { get; set; } = string.Empty;
+
+        public DateTime IssuedAt { get; set; }
+        public DateTime DueAt { get; set; }
+        public DateTime? ReturnedAt { get; set; }
+        public LoanStatus Status { get; set; }
+        public int RenewalCount { get; set; }
+
+        public string IssuedBy { get; set; } = string.Empty;
+        public string? ReceivedBy { get; set; }
+
+        public bool IsOverdue { get; set; }
+        public int OverdueDays { get; set; }
+        public decimal EstimatedOrActualFine { get; set; }
+        public FineStatus? FineStatus { get; set; }
+        public decimal? AmountPaid { get; set; }
+        public decimal? WaivedAmount { get; set; }
+
+        public BookCopyStatus? ReturnCondition { get; set; }
+        public string? ConditionNotes { get; set; }
+    }
+
+    public class LoanHistorySummaryViewModel
+    {
+        public int TotalLoans { get; set; }
+        public int ActiveLoansCount { get; set; }
+        public int ReturnedLoansCount { get; set; }
+        public int OverdueLoansCount { get; set; }
+        public int LostLoansCount { get; set; }
+        public decimal TotalFinesAssessed { get; set; }
+    }
 }

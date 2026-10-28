@@ -15,6 +15,9 @@ namespace College_Library_Management_System.Services.Interfaces
         Task<RenewLoanViewModel?> GetLoanForRenewalAsync(int loanId);
         Task<(bool Success, string Message, DateTime? NewDueAt)> RenewLoanAsync(int loanId, string userId, string userEmail);
         Task<PaginatedList<ActiveLoanListItemViewModel>> GetActiveLoansAsync(ActiveLoanListFilterViewModel filter);
+        Task<PaginatedList<LoanHistoryItemViewModel>> GetLoanHistoryAsync(LoanHistoryFilterViewModel filter);
+        Task<LoanHistorySummaryViewModel> GetLoanHistorySummaryAsync();
+        Task<byte[]> ExportLoanHistoryCsvAsync(LoanHistoryFilterViewModel filter);
         Task<List<SelectListItem>> GetDepartmentOptionsAsync();
         Task<LibrarySetting> GetLibrarySettingAsync();
     }

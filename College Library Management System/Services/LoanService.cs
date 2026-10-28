@@ -576,5 +576,248 @@ namespace College_Library_Management_System.Services
                 })
                 .ToListAsync();
         }
+
+        public async Task<LoanHistorySummaryViewModel> GetLoanHistorySummaryAsync()
+        {
+            var today = _dateTimeProvider.Now.Date;
+            var allLoans = _context.Loans.AsNoTracking();
+
+            var totalLoans = await allLoans.CountAsync();
+            var activeLoansCount = await allLoans.CountAsync(l => l.Status == LoanStatus.Active);
+            var returnedLoansCount = await allLoans.CountAsync(l => l.Status == LoanStatus.Returned);
+            var lostLoansCount = await allLoans.CountAsync(l => l.Status == LoanStatus.Lost);
+            var overdueLoansCount = await allLoans.CountAsync(l => l.Status == LoanStatus.Active && l.DueAt.Date < today);
+            var totalFinesAssessed = await _context.Fines.SumAsync(f => (decimal?)f.FineAmount) ?? 0m;
+
+            return new LoanHistorySummaryViewModel
+            {
+                TotalLoans = totalLoans,
+                ActiveLoansCount = activeLoansCount,
+                ReturnedLoansCount = returnedLoansCount,
+                OverdueLoansCount = overdueLoansCount,
+                LostLoansCount = lostLoansCount,
+                TotalFinesAssessed = totalFinesAssessed
+            };
+        }
+
+        public async Task<PaginatedList<LoanHistoryItemViewModel>> GetLoanHistoryAsync(LoanHistoryFilterViewModel filter)
+        {
+            var query = BuildLoanHistoryQuery(filter);
+
+            if (filter.ActiveTab?.ToLowerInvariant() == "returned")
+            {
+                query = query.OrderByDescending(l => l.ReturnedAt ?? l.IssuedAt);
+            }
+            else
+            {
+                query = query.OrderByDescending(l => l.IssuedAt);
+            }
+
+            var totalCount = await query.CountAsync();
+            var setting = await GetLibrarySettingAsync();
+            var today = _dateTimeProvider.Now.Date;
+
+            var loans = await query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .Select(l => new
+                {
+                    Loan = l,
+                    Fine = l.Fine,
+                    Book = l.BookCopy.Book,
+                    BookCopy = l.BookCopy,
+                    Student = l.Student,
+                    Department = l.Student.Department,
+                    IssuedByUser = l.IssuedByUser,
+                    ReceivedByUser = l.ReceivedByUser
+                })
+                .ToListAsync();
+
+            var items = loans.Select(x =>
+            {
+                var l = x.Loan;
+                bool isOverdue = l.Status == LoanStatus.Active && l.DueAt.Date < today;
+                int overdueDays = 0;
+                decimal fineAmt = 0m;
+
+                if (x.Fine != null)
+                {
+                    fineAmt = x.Fine.FineAmount;
+                    if (l.ReturnedAt.HasValue && l.ReturnedAt.Value.Date > l.DueAt.Date)
+                    {
+                        overdueDays = (l.ReturnedAt.Value.Date - l.DueAt.Date).Days;
+                    }
+                }
+                else if (isOverdue)
+                {
+                    overdueDays = (today - l.DueAt.Date).Days;
+                    fineAmt = overdueDays * setting.DailyFineRate;
+                }
+
+                return new LoanHistoryItemViewModel
+                {
+                    LoanId = l.LoanId,
+                    BookCopyId = l.BookCopyId,
+                    AccessionNumber = x.BookCopy.AccessionNumber,
+                    BookTitle = x.Book.Title,
+                    BookId = x.Book.BookId,
+                    ShelfLocation = x.BookCopy.ShelfLocation,
+                    StudentId = l.StudentId,
+                    StudentEnrollment = x.Student.EnrollmentNumber,
+                    StudentName = x.Student.FullName,
+                    DepartmentCode = x.Department.DepartmentCode,
+                    DepartmentName = x.Department.DepartmentName,
+                    IssuedAt = _dateTimeProvider.ToLocalDateTime(l.IssuedAt),
+                    DueAt = _dateTimeProvider.ToLocalDateTime(l.DueAt),
+                    ReturnedAt = l.ReturnedAt.HasValue ? _dateTimeProvider.ToLocalDateTime(l.ReturnedAt.Value) : null,
+                    Status = l.Status,
+                    RenewalCount = l.RenewalCount,
+                    IssuedBy = x.IssuedByUser != null ? (x.IssuedByUser.FullName ?? x.IssuedByUser.UserName ?? "Staff") : "Staff",
+                    ReceivedBy = x.ReceivedByUser != null ? (x.ReceivedByUser.FullName ?? x.ReceivedByUser.UserName ?? "Staff") : null,
+                    IsOverdue = isOverdue,
+                    OverdueDays = overdueDays,
+                    EstimatedOrActualFine = fineAmt,
+                    FineStatus = x.Fine?.Status,
+                    AmountPaid = x.Fine?.AmountPaid,
+                    WaivedAmount = x.Fine?.WaivedAmount,
+                    ReturnCondition = x.BookCopy.Status,
+                    ConditionNotes = x.BookCopy.ConditionNotes
+                };
+            }).ToList();
+
+            return new PaginatedList<LoanHistoryItemViewModel>(items, totalCount, filter.PageNumber, filter.PageSize);
+        }
+
+        public async Task<byte[]> ExportLoanHistoryCsvAsync(LoanHistoryFilterViewModel filter)
+        {
+            var query = BuildLoanHistoryQuery(filter);
+            if (filter.ActiveTab?.ToLowerInvariant() == "returned")
+            {
+                query = query.OrderByDescending(l => l.ReturnedAt ?? l.IssuedAt);
+            }
+            else
+            {
+                query = query.OrderByDescending(l => l.IssuedAt);
+            }
+
+            var loans = await query.ToListAsync();
+            var sb = new System.Text.StringBuilder();
+
+            sb.AppendLine("Loan ID,Accession Number,Book Title,Student Enrollment,Student Name,Department,Issued Date,Due Date,Returned Date,Status,Renewals,Issued By,Received By,Fine Amount,Fine Status,Condition Notes");
+
+            foreach (var l in loans)
+            {
+                var loanId = l.LoanId;
+                var accession = EscapeCsv(l.BookCopy?.AccessionNumber ?? string.Empty);
+                var title = EscapeCsv(l.BookCopy?.Book?.Title ?? string.Empty);
+                var enrollment = EscapeCsv(l.Student?.EnrollmentNumber ?? string.Empty);
+                var studentName = EscapeCsv(l.Student?.FullName ?? string.Empty);
+                var dept = EscapeCsv(l.Student?.Department?.DepartmentCode ?? string.Empty);
+                var issuedDate = _dateTimeProvider.ToLocalDateTime(l.IssuedAt).ToString("yyyy-MM-dd HH:mm");
+                var dueDate = _dateTimeProvider.ToLocalDateTime(l.DueAt).ToString("yyyy-MM-dd");
+                var returnedDate = l.ReturnedAt.HasValue ? _dateTimeProvider.ToLocalDateTime(l.ReturnedAt.Value).ToString("yyyy-MM-dd HH:mm") : "Not Returned";
+                var status = l.Status.ToString();
+                var renewals = l.RenewalCount.ToString();
+                var issuedBy = EscapeCsv(l.IssuedByUser?.FullName ?? l.IssuedByUser?.UserName ?? "Staff");
+                var receivedBy = EscapeCsv(l.ReceivedByUser?.FullName ?? l.ReceivedByUser?.UserName ?? "-");
+                var fineAmount = l.Fine != null ? l.Fine.FineAmount.ToString("F2") : "0.00";
+                var fineStatus = l.Fine != null ? l.Fine.Status.ToString() : "None";
+                var notes = EscapeCsv(l.BookCopy?.ConditionNotes ?? string.Empty);
+
+                sb.AppendLine($"{loanId},{accession},{title},{enrollment},{studentName},{dept},{issuedDate},{dueDate},{returnedDate},{status},{renewals},{issuedBy},{receivedBy},{fineAmount},{fineStatus},{notes}");
+            }
+
+            return System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+        }
+
+        private IQueryable<Loan> BuildLoanHistoryQuery(LoanHistoryFilterViewModel filter)
+        {
+            var query = _context.Loans
+                .AsNoTracking()
+                .Include(l => l.Student)
+                    .ThenInclude(s => s.Department)
+                .Include(l => l.BookCopy)
+                    .ThenInclude(bc => bc.Book)
+                .Include(l => l.IssuedByUser)
+                .Include(l => l.ReceivedByUser)
+                .Include(l => l.Fine)
+                .AsQueryable();
+
+            var tab = (filter.ActiveTab ?? "all").ToLowerInvariant();
+            if (tab == "issued")
+            {
+                if (!filter.Status.HasValue)
+                {
+                    query = query.Where(l => l.Status == LoanStatus.Active);
+                }
+            }
+            else if (tab == "returned")
+            {
+                if (!filter.Status.HasValue)
+                {
+                    query = query.Where(l => l.Status == LoanStatus.Returned || l.Status == LoanStatus.Lost);
+                }
+            }
+
+            if (filter.Status.HasValue)
+            {
+                query = query.Where(l => l.Status == filter.Status.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
+            {
+                var term = filter.SearchTerm.Trim().ToLower();
+                query = query.Where(l =>
+                    l.Student.EnrollmentNumber.ToLower().Contains(term) ||
+                    l.Student.FullName.ToLower().Contains(term) ||
+                    l.BookCopy.AccessionNumber.ToLower().Contains(term) ||
+                    l.BookCopy.Book.Title.ToLower().Contains(term) ||
+                    (l.IssuedByUser != null && ((l.IssuedByUser.FullName != null && l.IssuedByUser.FullName.ToLower().Contains(term)) || (l.IssuedByUser.UserName != null && l.IssuedByUser.UserName.ToLower().Contains(term)))) ||
+                    (l.ReceivedByUser != null && ((l.ReceivedByUser.FullName != null && l.ReceivedByUser.FullName.ToLower().Contains(term)) || (l.ReceivedByUser.UserName != null && l.ReceivedByUser.UserName.ToLower().Contains(term)))));
+            }
+
+            if (filter.DepartmentId.HasValue && filter.DepartmentId.Value > 0)
+            {
+                query = query.Where(l => l.Student.DepartmentId == filter.DepartmentId.Value);
+            }
+
+            if (filter.FromDate.HasValue)
+            {
+                var fromUtc = filter.FromDate.Value.Date;
+                if (filter.DateFilterType?.Equals("Returned", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    query = query.Where(l => l.ReturnedAt.HasValue && l.ReturnedAt.Value >= fromUtc);
+                }
+                else
+                {
+                    query = query.Where(l => l.IssuedAt >= fromUtc);
+                }
+            }
+
+            if (filter.ToDate.HasValue)
+            {
+                var toUtc = filter.ToDate.Value.Date.AddDays(1).AddTicks(-1);
+                if (filter.DateFilterType?.Equals("Returned", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    query = query.Where(l => l.ReturnedAt.HasValue && l.ReturnedAt.Value <= toUtc);
+                }
+                else
+                {
+                    query = query.Where(l => l.IssuedAt <= toUtc);
+                }
+            }
+
+            return query;
+        }
+
+        private static string EscapeCsv(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            if (text.Contains(',') || text.Contains('"') || text.Contains('\n') || text.Contains('\r'))
+            {
+                return $"\"{text.Replace("\"", "\"\"")}\"";
+            }
+            return text;
+        }
     }
 }

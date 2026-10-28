@@ -172,5 +172,23 @@ namespace College_Library_Management_System.Controllers
             var result = await _loanService.CheckIssueEligibilityAsync(enrollment, accession);
             return Json(result);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> History(LoanHistoryFilterViewModel filter)
+        {
+            filter.DepartmentOptions = await _loanService.GetDepartmentOptionsAsync();
+            filter.Summary = await _loanService.GetLoanHistorySummaryAsync();
+            var loans = await _loanService.GetLoanHistoryAsync(filter);
+            ViewBag.Filter = filter;
+            return View(loans);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportHistory(LoanHistoryFilterViewModel filter)
+        {
+            var csvBytes = await _loanService.ExportLoanHistoryCsvAsync(filter);
+            var fileName = $"Circulation_History_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            return File(csvBytes, "text/csv", fileName);
+        }
     }
 }
