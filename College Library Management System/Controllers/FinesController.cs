@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using College_Library_Management_System.Services.Common;
 using College_Library_Management_System.Services.Interfaces;
 using College_Library_Management_System.ViewModels.Fines;
 using Microsoft.AspNetCore.Authorization;
@@ -10,10 +11,17 @@ namespace College_Library_Management_System.Controllers
     public class FinesController : Controller
     {
         private readonly IFineService _fineService;
+        private readonly IPdfReportService _pdfReportService;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
-        public FinesController(IFineService fineService)
+        public FinesController(
+            IFineService fineService,
+            IPdfReportService pdfReportService,
+            IDateTimeProvider dateTimeProvider)
         {
             _fineService = fineService;
+            _pdfReportService = pdfReportService;
+            _dateTimeProvider = dateTimeProvider;
         }
 
         [HttpGet]
@@ -85,6 +93,28 @@ namespace College_Library_Management_System.Controllers
             }
 
             return View(receipt);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadReceiptPdf(string receiptNumber)
+        {
+            if (string.IsNullOrWhiteSpace(receiptNumber))
+            {
+                TempData["Error"] = "Invalid receipt number.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var receipt = await _fineService.GetReceiptByNumberAsync(receiptNumber);
+            if (receipt == null)
+            {
+                TempData["Error"] = $"Receipt #{receiptNumber} not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var now = _dateTimeProvider.Now;
+            var pdfBytes = _pdfReportService.GenerateFineReceiptPdf(receipt, now);
+            var fileName = $"Receipt_{receipt.ReceiptNumber}_{now:yyyyMMddHHmmss}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
 
         [HttpGet]

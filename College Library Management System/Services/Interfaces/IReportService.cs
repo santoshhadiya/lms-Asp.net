@@ -9,6 +9,5 @@ namespace College_Library_Management_System.Services.Interfaces
         Task<OverdueReportFilterViewModel> GetOverdueReportAsync(OverdueReportFilterViewModel filter);
         Task<InventoryReportViewModel> GetInventoryReportAsync();
         Task<CollectionReportFilterViewModel> GetCollectionReportAsync(CollectionReportFilterViewModel filter);
-        Task<PaginatedList<AuditLogListItemViewModel>> GetAuditLogsAsync(AuditLogReportFilterViewModel filter);
     }
 }

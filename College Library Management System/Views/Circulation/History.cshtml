@@ -15,6 +15,17 @@
         <p class="text-muted small mb-0">Complete circulation audit trail of all issued books and return records across all departments.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
+        <a asp-action="ExportHistoryPdf"
+           asp-route-searchTerm="@filter.SearchTerm"
+           asp-route-departmentId="@filter.DepartmentId"
+           asp-route-status="@filter.Status"
+           asp-route-activeTab="@filter.ActiveTab"
+           asp-route-fromDate="@(filter.FromDate?.ToString("yyyy-MM-dd"))"
+           asp-route-toDate="@(filter.ToDate?.ToString("yyyy-MM-dd"))"
+           asp-route-dateFilterType="@filter.DateFilterType"
+           class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Export to PDF
+        </a>
         <a asp-action="ExportHistory"
            asp-route-searchTerm="@filter.SearchTerm"
            asp-route-departmentId="@filter.DepartmentId"

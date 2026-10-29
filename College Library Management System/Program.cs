@@ -63,6 +63,7 @@ builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.ILoanService, College_Library_Management_System.Services.LoanService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IFineService, College_Library_Management_System.Services.FineService>();
 builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IReportService, College_Library_Management_System.Services.ReportService>();
+builder.Services.AddScoped<College_Library_Management_System.Services.Interfaces.IPdfReportService, College_Library_Management_System.Services.PdfReportService>();
 
 builder.Services.AddControllersWithViews();
 

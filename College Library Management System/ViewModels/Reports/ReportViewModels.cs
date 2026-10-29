@@ -105,28 +105,4 @@ namespace College_Library_Management_System.ViewModels.Reports
         public string AccessionNumber { get; set; } = string.Empty;
         public string CashierName { get; set; } = string.Empty;
     }
-
-    public class AuditLogReportFilterViewModel
-    {
-        public string? Action { get; set; }
-        public string? EntityType { get; set; }
-        public string? SearchTerm { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public int PageNumber { get; set; } = 1;
-        public int PageSize { get; set; } = 25;
-        public PaginatedList<AuditLogListItemViewModel>? Logs { get; set; }
-    }
-
-    public class AuditLogListItemViewModel
-    {
-        public int AuditLogId { get; set; }
-        public string Action { get; set; } = string.Empty;
-        public string EntityType { get; set; } = string.Empty;
-        public string EntityId { get; set; } = string.Empty;
-        public string PerformedByUserId { get; set; } = string.Empty;
-        public string? PerformedByUserEmail { get; set; }
-        public DateTime Timestamp { get; set; }
-        public string? Details { get; set; }
-    }
 }

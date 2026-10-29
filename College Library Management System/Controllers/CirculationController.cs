@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using College_Library_Management_System.Services.Common;
 using College_Library_Management_System.Models.Enums;
 using College_Library_Management_System.Services.Interfaces;
 using College_Library_Management_System.ViewModels.Circulation;
@@ -11,10 +12,17 @@ namespace College_Library_Management_System.Controllers
     public class CirculationController : Controller
     {
         private readonly ILoanService _loanService;
+        private readonly IPdfReportService _pdfReportService;
+        private readonly IDateTimeProvider _dateTimeProvider;
 
-        public CirculationController(ILoanService loanService)
+        public CirculationController(
+            ILoanService loanService,
+            IPdfReportService pdfReportService,
+            IDateTimeProvider dateTimeProvider)
         {
             _loanService = loanService;
+            _pdfReportService = pdfReportService;
+            _dateTimeProvider = dateTimeProvider;
         }
 
         [HttpGet]
@@ -189,6 +197,32 @@ namespace College_Library_Management_System.Controllers
             var csvBytes = await _loanService.ExportLoanHistoryCsvAsync(filter);
             var fileName = $"Circulation_History_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             return File(csvBytes, "text/csv", fileName);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportHistoryPdf(LoanHistoryFilterViewModel filter)
+        {
+            var exportFilter = new LoanHistoryFilterViewModel
+            {
+                SearchTerm = filter.SearchTerm,
+                DepartmentId = filter.DepartmentId,
+                Status = filter.Status,
+                ActiveTab = filter.ActiveTab,
+                FromDate = filter.FromDate,
+                ToDate = filter.ToDate,
+                DateFilterType = filter.DateFilterType,
+                PageNumber = 1,
+                PageSize = 2000
+            };
+
+            exportFilter.DepartmentOptions = await _loanService.GetDepartmentOptionsAsync();
+            exportFilter.Summary = await _loanService.GetLoanHistorySummaryAsync();
+            var loans = await _loanService.GetLoanHistoryAsync(exportFilter);
+
+            var now = _dateTimeProvider.Now;
+            var pdfBytes = _pdfReportService.GenerateCirculationHistoryPdf(loans, exportFilter, now);
+            var fileName = $"Circulation_History_{now:yyyyMMdd_HHmmss}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
     }
 }

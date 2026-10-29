@@ -9,9 +9,14 @@
             <a asp-action="Index" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back to Fines
             </a>
-            <button type="button" class="btn btn-primary-library" onclick="window.print()">
-                <i class="bi bi-printer me-1"></i> Print Receipt
-            </button>
+            <div class="d-flex gap-2">
+                <a asp-action="DownloadReceiptPdf" asp-route-receiptNumber="@Model.ReceiptNumber" class="btn btn-danger">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+                </a>
+                <button type="button" class="btn btn-primary-library" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i> Print Receipt
+                </button>
+            </div>
         </div>
 
         <!-- Printable Receipt Voucher -->

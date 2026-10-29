@@ -13,8 +13,15 @@
         <a asp-action="Index" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Reports Hub
         </a>
-        <button type="button" class="btn btn-primary-library" onclick="window.print()">
-            <i class="bi bi-printer me-1"></i> Print / Export PDF
+        <a asp-action="ExportCollectionsPdf"
+           asp-route-startDate="@(Model.StartDate?.ToString("yyyy-MM-dd"))"
+           asp-route-endDate="@(Model.EndDate?.ToString("yyyy-MM-dd"))"
+           asp-route-paymentMethod="@Model.PaymentMethod"
+           class="btn btn-danger">
+            <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+        </a>
+        <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i> Print
         </button>
     </div>
 </div>

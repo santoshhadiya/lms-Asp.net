@@ -122,10 +122,7 @@
                         <i class="bi bi-receipt-cutoff"></i>
                         <span>Financial Collections</span>
                     </a>
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" && ViewContext.RouteData.Values["action"]?.ToString() == "AuditLogs" ? "active" : "")" asp-controller="Reports" asp-action="AuditLogs">
-                        <i class="bi bi-shield-check"></i>
-                        <span>System Audit Trail</span>
-                    </a>
+
 
                     @if (User.IsInRole("Admin"))
                     {
